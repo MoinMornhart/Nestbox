@@ -385,6 +385,12 @@ pub async fn eject_iso(state: Shared<'_>, id: String) -> AppResult<()> {
     .await
 }
 
+/// Gasterweiterungen (Treiber für flüssiges Bild) in die VM einlegen.
+#[tauri::command]
+pub async fn install_guest_tools(state: Shared<'_>, id: String) -> AppResult<()> {
+    blocking(&state, move |st| with_backend(&st, &id, |b, vm| b.install_guest_tools(vm))).await
+}
+
 #[tauri::command]
 pub async fn delete_vm(state: Shared<'_>, id: String, delete_disk: bool) -> AppResult<()> {
     blocking(&state, move |st| {

@@ -244,7 +244,16 @@ impl VmBackend for VBoxBackend {
                 "--firmware", "efi",
                 "--ioapic", "on",
                 "--graphicscontroller", if windows { "vboxsvga" } else { "vmsvga" },
-                "--vram", "128",
+                // Für flüssiges Video: 3D-Beschleunigung und maximaler Grafikspeicher
+                "--vram", "256",
+                "--accelerate-3d", "on",
+                "--nested-paging", "on",
+                "--large-pages", "on",
+                // Ton über das Standard-Audiogerät von Windows
+                "--audio-driver", "default",
+                "--audio-controller", "hda",
+                "--audio-enabled", "on",
+                "--audio-out", "on",
                 "--nic1", "nat",
                 "--usbohci", "on",
                 "--mouse", "usbtablet",
@@ -425,6 +434,15 @@ impl VmBackend for VBoxBackend {
         )?;
         // Startreihenfolge nur änderbar, wenn die VM aus ist – sonst reicht das leere Laufwerk.
         let _ = self.run("Startreihenfolge anpassen", args(&["modifyvm", &Self::id(vm), "--boot1", "disk", "--boot2", "dvd"]));
+        Ok(())
+    }
+
+    fn install_guest_tools(&self, vm: &VmRecord) -> AppResult<()> {
+        // „additions“ ist die CD mit den VirtualBox-Gasterweiterungen (Grafik-, Maus- und Zwischenablage-Treiber).
+        self.run(
+            "Gasterweiterungen einlegen",
+            args(&["storageattach", &Self::id(vm), "--storagectl", CONTROLLER, "--port", "1", "--device", "0", "--type", "dvddrive", "--medium", "additions", "--forceunmount"]),
+        )?;
         Ok(())
     }
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Disc3, ExternalLink, Feather, Gauge, HardDrive, Loader2, MemoryStick, Rocket, Scale, Sparkles, Upload, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Disc3, ExternalLink, Feather, Gauge, HardDrive, Loader2, MemoryStick, MonitorPlay, Rocket, Scale, Sparkles, Upload, X } from "lucide-react";
 import { api, onFileDrop, openLink, pickIso } from "../../lib/api";
 import { guessOs, OS_CATALOG, osById, OsLogo, suggestName } from "../../lib/os";
 import { formatMemory, limitsFor, presetsFor, type PresetId } from "../../lib/presets";
@@ -510,7 +510,15 @@ export function Wizard({
                       </span>
                     </div>
                   )}
-                  <div className="mt-5 flex gap-3 rounded-xl border border-line bg-surface p-4 text-left text-[13.5px]">
+                  {backend === "virtualbox" && (
+                    <div className="mt-5 flex gap-3 rounded-xl border border-line bg-surface p-4 text-left text-[13.5px]">
+                      <MonitorPlay className="mt-0.5 size-4 shrink-0 text-accent" />
+                      <span>
+                        <b>Für flüssige Videos:</b> Wähle nach der Installation im Menü der VM („…“) „Gasterweiterungen installieren“.
+                      </span>
+                    </div>
+                  )}
+                  <div className="mt-3 flex gap-3 rounded-xl border border-line bg-surface p-4 text-left text-[13.5px]">
                     <Disc3 className="mt-0.5 size-4 shrink-0 text-accent" />
                     <span>Nach der Installation kannst du das Installationsmedium über das Menü der VM („…“ → „Installationsmedium auswerfen“) entfernen.</span>
                   </div>

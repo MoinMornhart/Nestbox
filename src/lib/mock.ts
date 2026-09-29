@@ -228,6 +228,9 @@ export async function mockCall<T>(cmd: string, args: Record<string, unknown> = {
       Object.assign(v, args.changes);
       return undefined as T;
     }
+    case "install_guest_tools":
+      await wait(500);
+      return undefined as T;
     case "eject_iso":
       find(id).isoPath = null;
       return undefined as T;

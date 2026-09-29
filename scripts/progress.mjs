@@ -93,6 +93,19 @@ s.images = fs.existsSync(imgDir)
     }).sort((a, b) => a.order - b.order || a.base.localeCompare(b.base) || a.theme.localeCompare(b.theme))
   : [];
 
+// iCloud benennt Dateien bei Sync-Konflikten um („mod.rs“ → „mod 2.rs“). Solche Dateien sofort melden.
+function findConflicts(dir, rel = "") {
+  let out = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (["node_modules", "target", "objects"].includes(e.name)) continue;
+    const r = rel ? rel + "/" + e.name : e.name;
+    if (/ \d+(\.[^.]+)?$/.test(e.name)) out.push(r);
+    if (e.isDirectory()) out = out.concat(findConflicts(path.join(dir, e.name), r));
+  }
+  return out;
+}
+s.icloudConflicts = findConflicts(root);
+
 s.updated = now().toISOString();
 fs.mkdirSync(dir, { recursive: true });
 fs.writeFileSync(statusFile, JSON.stringify(s, null, 2));
@@ -109,6 +122,7 @@ const label = { done: "erledigt", active: "in Arbeit", open: "offen" };
 const groups = {};
 for (const img of s.images) (groups[img.group] ||= []).push(img);
 const openProblems = s.problems.filter((p) => !p.solved);
+for (const c of s.icloudConflicts) openProblems.unshift({ t: s.updated, text: `iCloud-Konfliktdatei gefunden: ${c}`, fix: "Datei prüfen und auf den ursprünglichen Namen zurückbenennen" });
 
 const html = `<!doctype html>
 <html lang="de">

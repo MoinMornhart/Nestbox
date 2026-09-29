@@ -6,9 +6,9 @@ import { Button, Dialog, IconButton, Tooltip } from "../components/ui";
 import { useToast } from "../components/feedback";
 import { EmptyNest, NestboxLogo } from "../components/Logo";
 import { VmCard, type VmAction } from "./VmCard";
-import { AppSettingsDialog, DeleteDialog, RenameDialog, SnapshotsDialog, VmSettingsDialog } from "./dialogs";
+import { AppSettingsDialog, DeleteDialog, GuestToolsDialog, RenameDialog, SnapshotsDialog, VmSettingsDialog } from "./dialogs";
 
-export type OpenDialog = { kind: "snapshots" | "rename" | "delete" | "settings" | "poweroff"; id: string } | { kind: "app-settings" } | null;
+export type OpenDialog = { kind: "snapshots" | "rename" | "delete" | "settings" | "poweroff" | "guesttools"; id: string } | { kind: "app-settings" } | null;
 
 const BUSY_LABEL: Partial<Record<VmAction, string>> = {
   start: "Startet …",
@@ -17,6 +17,7 @@ const BUSY_LABEL: Partial<Record<VmAction, string>> = {
   shutdown: "Fährt herunter …",
   poweroff: "Wird ausgeschaltet …",
   eject: "Wirft aus …",
+  guesttools: "Legt Treiber-CD ein …",
 };
 
 export function Dashboard({
@@ -55,6 +56,7 @@ export function Dashboard({
       shutdown: () => api.shutdown(vm.id),
       console: () => api.openConsole(vm.id),
       eject: () => api.ejectIso(vm.id),
+      guesttools: () => api.installGuestTools(vm.id),
     };
     if (action === "poweroff" || action === "rename" || action === "delete" || action === "settings" || action === "snapshots") {
       setDialog({ kind: action, id: vm.id });
@@ -68,6 +70,7 @@ export function Dashboard({
       await fn();
       if (action === "eject") toast.ok("Installationsmedium ausgeworfen – die VM startet jetzt von ihrer Festplatte");
       if (action === "shutdown") toast.ok(`„${vm.name}“ ist heruntergefahren`);
+      if (action === "guesttools") setDialog({ kind: "guesttools", id: vm.id });
     } catch (e) {
       toast.error(e as AppError);
     } finally {
@@ -141,6 +144,7 @@ export function Dashboard({
       </main>
 
       {dialog?.kind === "snapshots" && dialogVm && <SnapshotsDialog vm={dialogVm} onClose={() => closeAndRefresh()} />}
+      {dialog?.kind === "guesttools" && dialogVm && <GuestToolsDialog vm={dialogVm} onClose={() => setDialog(null)} />}
       {dialog?.kind === "rename" && dialogVm && <RenameDialog vm={dialogVm} onClose={() => setDialog(null)} onDone={() => closeAndRefresh("Umbenannt")} />}
       {dialog?.kind === "delete" && dialogVm && <DeleteDialog vm={dialogVm} onClose={() => setDialog(null)} onDone={() => closeAndRefresh(`„${dialogVm.name}“ wurde gelöscht`)} />}
       {dialog?.kind === "settings" && dialogVm && (

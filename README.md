@@ -94,6 +94,8 @@ Alle VM-Operationen laufen im Rust-Backend. PowerShell wird mit `powershell.exe 
 - Windows-Gäste: TPM 2.0 und Secure Boot (Microsoft-Schlüssel) – damit läuft Windows 11.
 - Steuerung über `VBoxManage` (`startvm`, `controlvm pause/resume/acpipowerbutton/poweroff`, `snapshot take/restore/delete`).
 - Status alle 2 Sekunden (`showvminfo --machinereadable`), CPU/RAM über den Prozess `VirtualBoxVM.exe`.
+- Auf flüssiges Video getrimmt: 3D-Beschleunigung, 256 MB Grafikspeicher, HD-Audio, Nested Paging und große Speicherseiten. Über „…“ → „Gasterweiterungen installieren“ legt Nestbox die Treiber-CD ein (danach: flüssiges Bild, automatische Fenstergröße, Zwischenablage).
+- Hinweis zu Streamingdiensten: Wegen des Kopierschutzes (DRM) liefern Netflix & Co. in VMs meist höchstens HD (720p–1080p), kein 4K/HDR.
 
 ### QEMU
 

@@ -78,6 +78,7 @@ export const api = {
   rename: (id: string, name: string) => call<void>("rename_vm", { id, name }),
   update: (id: string, changes: VmChanges) => call<void>("update_vm", { id, changes }),
   ejectIso: (id: string) => call<void>("eject_iso", { id }),
+  installGuestTools: (id: string) => call<void>("install_guest_tools", { id }),
   remove: (id: string, deleteDisk: boolean) => call<void>("delete_vm", { id, deleteDisk }),
 
   listSnapshots: (id: string) => call<Snapshot[]>("list_snapshots", { id }),

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, FileText, FolderOpen, History, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { AlertTriangle, FileText, FolderOpen, History, MonitorPlay, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { api, pickFolder, revealPath } from "../lib/api";
 import { formatMemory, limitsFor } from "../lib/presets";
 import type { AppError, BackendChoice, HostInfo, Settings, Snapshot, Vm } from "../lib/types";
@@ -549,5 +549,80 @@ function Section({ title, sub, children }: { title: string; sub?: React.ReactNod
       {sub && <div className="mb-2.5 mt-0.5 text-[13px] text-text-2">{sub}</div>}
       {children}
     </div>
+  );
+}
+
+// ── Gasterweiterungen (flüssiges Bild) ──
+
+export function GuestToolsDialog({ vm, onClose }: { vm: Vm; onClose: () => void }) {
+  const windows = vm.osFamily === "windows";
+  const steps = windows
+    ? [
+        "Im VM-Fenster den Explorer öffnen und das CD-Laufwerk „VirtualBox Guest Additions“ anklicken.",
+        "„VBoxWindowsAdditions.exe“ doppelklicken und mit „Weiter“ durch die Installation gehen.",
+        "Die VM neu starten – fertig.",
+      ]
+    : [
+        "Im VM-Fenster ein Terminal öffnen (Ubuntu/Mint: Strg + Alt + T).",
+        "Diesen Befehl einfügen und mit Enter bestätigen:",
+        "Das eigene Passwort eingeben, warten bis es fertig ist, und die VM neu starten.",
+      ];
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      width={520}
+      title="Gasterweiterungen sind eingelegt"
+      description={`Die Treiber-CD liegt jetzt im Laufwerk von „${vm.name}“. Nach der Installation laufen Videos flüssig, das Fenster passt sich der Größe an und die Zwischenablage funktioniert.`}
+      icon={
+        <span className="flex size-10 items-center justify-center rounded-full bg-accent-soft">
+          <MonitorPlay className="size-5 text-accent-text" />
+        </span>
+      }
+      footer={
+        <Button variant="primary" onClick={onClose}>
+          Verstanden
+        </Button>
+      }
+    >
+      <ol className="space-y-2.5">
+        {steps.map((s, i) => (
+          <li key={s} className="flex gap-3 text-[13.5px]">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-bg-subtle text-[12px] font-semibold text-text-2">{i + 1}</span>
+            <span className="min-w-0 flex-1 pt-0.5 selectable">
+              {s}
+              {!windows && i === 1 && <CopyCode text="sudo sh /media/$USER/VBox*/VBoxLinuxAdditions.run" />}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <div className="mt-4 rounded-xl bg-bg-subtle p-3.5 text-[12.5px] text-text-2">
+        <b className="text-text">Tipp für Filme:</b> Mit <b>Rechte Strg + F</b> schaltest du das VM-Fenster in den Vollbildmodus. Streamingdienste wie Netflix zeigen in VMs wegen ihres Kopierschutzes meist höchstens HD (720p–1080p).
+      </div>
+    </Dialog>
+  );
+}
+
+function CopyCode({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <span className="mt-1.5 flex items-center gap-2 rounded-lg bg-bg-subtle py-1.5 pl-3 pr-1.5">
+      <code className="min-w-0 flex-1 break-all font-mono text-[12px]">{text}</code>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          } catch {
+            /* Zwischenablage nicht verfügbar */
+          }
+        }}
+      >
+        {copied ? "Kopiert" : "Kopieren"}
+      </Button>
+    </span>
   );
 }

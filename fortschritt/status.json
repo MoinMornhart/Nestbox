@@ -37,8 +37,28 @@
       "state": "open"
     }
   ],
-  "now": "Warte auf mehr Speicherplatz auf C:, um VirtualBox und QEMU am echten System zu testen",
+  "now": "Optimiere VirtualBox-VMs für flüssiges Video (3D, Ton, Gasterweiterungen)",
   "files": [
+    {
+      "path": "scripts/progress.mjs",
+      "t": "2026-09-29T11:14:11.838Z"
+    },
+    {
+      "path": "src/screens/VmCard.tsx",
+      "t": "2026-09-29T11:14:11.838Z"
+    },
+    {
+      "path": "src/screens/dialogs.tsx",
+      "t": "2026-09-29T11:14:11.838Z"
+    },
+    {
+      "path": "src-tauri/src/backend/qemu.rs",
+      "t": "2026-09-29T11:14:11.838Z"
+    },
+    {
+      "path": "src-tauri/src/backend/vbox.rs",
+      "t": "2026-09-29T11:14:11.838Z"
+    },
     {
       "path": "README.md",
       "t": "2026-09-29T10:59:30.418Z"
@@ -53,10 +73,6 @@
     },
     {
       "path": "src-tauri/src/backend/mod.rs",
-      "t": "2026-09-29T10:59:30.418Z"
-    },
-    {
-      "path": "src-tauri/src/backend/vbox.rs",
       "t": "2026-09-29T10:59:30.418Z"
     },
     {
@@ -82,25 +98,29 @@
     {
       "path": "src-tauri/src/commands.rs",
       "t": "2026-09-29T09:49:22.939Z"
-    },
-    {
-      "path": "scripts/tauri.mjs",
-      "t": "2026-09-29T09:32:02.144Z"
-    },
-    {
-      "path": ".gitattributes",
-      "t": "2026-09-29T06:09:43.539Z"
-    },
-    {
-      "path": "start.bat",
-      "t": "2026-09-29T06:09:43.539Z"
-    },
-    {
-      "path": "scripts/screenshots.mjs",
-      "t": "2026-09-29T06:04:59.854Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-09-29T11:14:11.838Z",
+      "text": "Fortschrittsseite meldet jetzt iCloud-Konfliktdateien automatisch (iCloud hatte screenshots.mjs und .git/config umbenannt – behoben)"
+    },
+    {
+      "t": "2026-09-29T11:14:11.838Z",
+      "text": "QEMU: Ton (HD-Audio) und virtio-Grafik für Linux-Gäste"
+    },
+    {
+      "t": "2026-09-29T11:14:11.838Z",
+      "text": "Neue Aktion „Gasterweiterungen installieren“ mit Schritt-für-Schritt-Anleitung und kopierbarem Befehl"
+    },
+    {
+      "t": "2026-09-29T11:14:11.837Z",
+      "text": "VirtualBox-VMs für flüssiges Video optimiert: 3D-Beschleunigung, 256 MB Grafikspeicher, HD-Audio, Nested Paging"
+    },
+    {
+      "t": "2026-09-29T11:09:25.749Z",
+      "text": "Dein Wunsch: flüssiges Video (z. B. Netflix) in der VM – VirtualBox wird darauf getrimmt"
+    },
     {
       "t": "2026-09-29T10:59:30.418Z",
       "text": "Alle Vorschaubilder neu aufgenommen"
@@ -559,7 +579,7 @@
       "group": "Overlays",
       "order": 15,
       "theme": "dunkel",
-      "t": "2026-09-29T10:58:09.555Z"
+      "t": "2026-09-29T11:12:38.935Z"
     },
     {
       "file": "erstellen-fertig-hell.png",
@@ -568,7 +588,7 @@
       "group": "Overlays",
       "order": 15,
       "theme": "hell",
-      "t": "2026-09-29T10:58:02.972Z"
+      "t": "2026-09-29T11:12:32.284Z"
     },
     {
       "file": "erstellen-fehler-dunkel.png",
@@ -595,7 +615,7 @@
       "group": "Overlays",
       "order": 17,
       "theme": "dunkel",
-      "t": "2026-09-29T10:58:26.294Z"
+      "t": "2026-09-29T11:12:24.398Z"
     },
     {
       "file": "kontextmenue-hell.png",
@@ -604,7 +624,7 @@
       "group": "Overlays",
       "order": 17,
       "theme": "hell",
-      "t": "2026-09-29T10:58:23.348Z"
+      "t": "2026-09-29T11:12:21.416Z"
     },
     {
       "file": "dialog-sicherungspunkte-dunkel.png",
@@ -697,11 +717,29 @@
       "t": "2026-09-29T10:58:52.878Z"
     },
     {
+      "file": "dialog-gasterweiterungen-dunkel.png",
+      "base": "dialog-gasterweiterungen",
+      "title": "Gasterweiterungen – flüssiges Bild",
+      "group": "Overlays",
+      "order": 23,
+      "theme": "dunkel",
+      "t": "2026-09-29T11:13:27.931Z"
+    },
+    {
+      "file": "dialog-gasterweiterungen-hell.png",
+      "base": "dialog-gasterweiterungen",
+      "title": "Gasterweiterungen – flüssiges Bild",
+      "group": "Overlays",
+      "order": 23,
+      "theme": "hell",
+      "t": "2026-09-29T11:13:25.251Z"
+    },
+    {
       "file": "dialog-vm-einstellungen-dunkel.png",
       "base": "dialog-vm-einstellungen",
       "title": "VM-Einstellungen",
       "group": "Overlays",
-      "order": 23,
+      "order": 24,
       "theme": "dunkel",
       "t": "2026-09-29T10:59:00.663Z"
     },
@@ -710,7 +748,7 @@
       "base": "dialog-vm-einstellungen",
       "title": "VM-Einstellungen",
       "group": "Overlays",
-      "order": 23,
+      "order": 24,
       "theme": "hell",
       "t": "2026-09-29T10:58:58.086Z"
     },
@@ -719,7 +757,7 @@
       "base": "fehler-toast",
       "title": "Fehlermeldung mit Lösungsvorschlag",
       "group": "Overlays",
-      "order": 24,
+      "order": 25,
       "theme": "dunkel",
       "t": "2026-09-29T10:59:08.030Z"
     },
@@ -728,7 +766,7 @@
       "base": "fehler-toast",
       "title": "Fehlermeldung mit Lösungsvorschlag",
       "group": "Overlays",
-      "order": 24,
+      "order": 25,
       "theme": "hell",
       "t": "2026-09-29T10:59:04.368Z"
     },
@@ -737,7 +775,7 @@
       "base": "tooltip",
       "title": "Tooltip für Fachbegriffe",
       "group": "Overlays",
-      "order": 25,
+      "order": 26,
       "theme": "dunkel",
       "t": "2026-09-29T10:59:14.645Z"
     },
@@ -746,10 +784,11 @@
       "base": "tooltip",
       "title": "Tooltip für Fachbegriffe",
       "group": "Overlays",
-      "order": 25,
+      "order": 26,
       "theme": "hell",
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-09-29T10:59:30.434Z"
+  "updated": "2026-09-29T11:14:11.860Z",
+  "icloudConflicts": []
 }

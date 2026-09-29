@@ -48,6 +48,7 @@ const SHOTS = [
     async (p) => { await p.getByRole("checkbox").check(); await p.waitForTimeout(300); }],
   ["dialog-ausschalten", "Bestätigung – Sofort ausschalten", "Overlays", "?view=dashboard&dialog=poweroff:a1"],
   ["dialog-umbenennen", "Umbenennen", "Overlays", "?view=dashboard&dialog=rename:c3"],
+  ["dialog-gasterweiterungen", "Gasterweiterungen – flüssiges Bild", "Overlays", "?view=dashboard&dialog=guesttools:a1"],
   ["dialog-vm-einstellungen", "VM-Einstellungen", "Overlays", "?view=dashboard&dialog=settings:c3"],
   ["fehler-toast", "Fehlermeldung mit Lösungsvorschlag", "Overlays", "?view=dashboard&fail=start",
     async (p) => { await byText(p, "Starten").first().click(); await p.getByText("Technische Details").waitFor(); await p.getByText("Technische Details").click(); await p.waitForTimeout(400); }],

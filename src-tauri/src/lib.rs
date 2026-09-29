@@ -48,6 +48,7 @@ pub fn run() {
             commands::rename_vm,
             commands::update_vm,
             commands::eject_iso,
+            commands::install_guest_tools,
             commands::delete_vm,
             commands::list_snapshots,
             commands::create_snapshot,

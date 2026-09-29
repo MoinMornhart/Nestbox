@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Disc3, History, Loader2, Monitor, MoreHorizontal, Pause, Pencil, Play, Power, PowerOff, Settings2, Trash2, Zap } from "lucide-react";
+import { Disc3, History, MonitorPlay, Loader2, Monitor, MoreHorizontal, Pause, Pencil, Play, Power, PowerOff, Settings2, Trash2, Zap } from "lucide-react";
 import { OsLogo } from "../lib/os";
 import { formatMemory } from "../lib/presets";
 import type { PowerState, Vm } from "../lib/types";
 import { Button, cx, IconButton, Menu, Meter, type MenuItem } from "../components/ui";
 
-export type VmAction = "start" | "pause" | "resume" | "shutdown" | "poweroff" | "console" | "rename" | "settings" | "snapshots" | "eject" | "delete";
+export type VmAction = "start" | "pause" | "resume" | "shutdown" | "poweroff" | "console" | "rename" | "settings" | "snapshots" | "eject" | "guesttools" | "delete";
 
 const STATE_LABEL: Record<PowerState, string> = {
   running: "Läuft",
@@ -58,6 +58,9 @@ export function VmCard({ vm, busy, onAction, index }: { vm: Vm; busy: string | n
     { label: "Sicherungspunkte", icon: <History className="size-4" />, onClick: () => onAction("snapshots"), disabled: missing },
     { label: "Umbenennen", icon: <Pencil className="size-4" />, onClick: () => onAction("rename"), separatorBefore: true, disabled: missing },
     { label: "Einstellungen", icon: <Settings2 className="size-4" />, onClick: () => onAction("settings"), disabled: missing },
+    ...(vm.backend === "virtualbox"
+      ? [{ label: "Gasterweiterungen installieren", icon: <MonitorPlay className="size-4" />, onClick: () => onAction("guesttools"), disabled: !on, hint: "flüssiges Bild" }]
+      : []),
     ...(vm.isoPath ? [{ label: "Installationsmedium auswerfen", icon: <Disc3 className="size-4" />, onClick: () => onAction("eject"), disabled: missing }] : []),
     { label: "Sofort ausschalten", icon: <Zap className="size-4" />, onClick: () => onAction("poweroff"), disabled: off || missing, hint: "wie Stecker ziehen", separatorBefore: true },
     { label: "Löschen …", icon: <Trash2 className="size-4" />, onClick: () => onAction("delete"), danger: true },

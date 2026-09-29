@@ -161,8 +161,16 @@ impl QemuBackend {
             "qemu-xhci".into(),
             "-device".into(),
             "usb-tablet".into(),
+            // Linux: virtio-Grafik (beliebige Auflösungen), Windows kennt ohne Treiber nur Standard-VGA
             "-vga".into(),
-            "std".into(),
+            if windows { "std".into() } else { "virtio".into() },
+            // Ton über HD-Audio
+            "-audiodev".into(),
+            "dsound,id=snd0".into(),
+            "-device".into(),
+            "intel-hda".into(),
+            "-device".into(),
+            "hda-duplex,audiodev=snd0".into(),
             "-rtc".into(),
             if windows { "base=localtime".into() } else { "base=utc".into() },
             "-display".into(),
@@ -426,6 +434,13 @@ impl VmBackend for QemuBackend {
             q.execute("eject", Some(json!({ "id": "cdrom0", "force": true })))?;
         }
         Ok(())
+    }
+
+    fn install_guest_tools(&self, _vm: &VmRecord) -> AppResult<()> {
+        Err(AppError::new(
+            "Für QEMU gibt es keine Gasterweiterungen in Nestbox",
+            "Für flüssiges Video empfehlen wir VirtualBox: Installiere es unter „Einstellungen → Einrichtung erneut prüfen“ und lege die VM damit neu an.",
+        ))
     }
 
     fn delete(&self, vm: &VmRecord, delete_disk: bool) -> AppResult<()> {

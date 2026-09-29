@@ -103,6 +103,8 @@ pub trait VmBackend: Send + Sync {
     fn rename(&self, vm: &VmRecord, new_name: &str) -> AppResult<()>;
     fn update(&self, vm: &VmRecord, changes: &VmChanges) -> AppResult<()>;
     fn eject_iso(&self, vm: &VmRecord) -> AppResult<()>;
+    /// Treiber-CD für flüssige Grafik, Ton und Zwischenablage in die VM einlegen
+    fn install_guest_tools(&self, vm: &VmRecord) -> AppResult<()>;
     fn delete(&self, vm: &VmRecord, delete_disk: bool) -> AppResult<()>;
     /// Liefert die Metadaten des neuen Sicherungspunkts (Nestbox speichert sie in der VM-Liste)
     fn create_snapshot(&self, vm: &VmRecord, name: &str) -> AppResult<Snapshot>;
