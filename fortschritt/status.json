@@ -40,6 +40,10 @@
   "now": "Installer ist fertig – Tests mit echten VMs folgen, sobald die Windows-VM mehr Platz und CPU-Typ „host“ hat",
   "files": [
     {
+      "path": "src-tauri/src/host.rs",
+      "t": "2026-09-29T16:58:36.860Z"
+    },
+    {
       "path": ".gitignore",
       "t": "2026-09-29T16:38:49.254Z"
     },
@@ -92,15 +96,19 @@
       "t": "2026-09-29T10:59:30.418Z"
     },
     {
-      "path": "src-tauri/src/host.rs",
-      "t": "2026-09-29T10:59:30.418Z"
-    },
-    {
       "path": "src-tauri/src/backend/mod.rs",
       "t": "2026-09-29T10:59:30.418Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-09-29T16:58:36.860Z",
+      "text": "Version 0.9.1 mit der Korrektur wird gebaut"
+    },
+    {
+      "t": "2026-09-29T16:58:36.859Z",
+      "text": "Fehler vom Test auf deinem PC: Einrichtungsprüfung brach bei verweigertem Zugriff ab – jetzt hat jede Teilprüfung einen Ausweichweg"
+    },
     {
       "t": "2026-09-29T16:38:49.254Z",
       "text": "Nestbox-Setup.exe liegt zusätzlich im Projektordner unter Installer/"
@@ -831,6 +839,6 @@
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-09-29T16:38:49.277Z",
+  "updated": "2026-09-29T16:58:36.894Z",
   "icloudConflicts": []
 }

@@ -1,4 +1,4 @@
-﻿//! Einrichtungsprüfung: Windows-Version, Virtualisierung (BIOS bzw. verschachtelt),
+//! Einrichtungsprüfung: Windows-Version, Virtualisierung (BIOS bzw. verschachtelt),
 //! VirtualBox, QEMU, Windows-Hypervisor-Plattform. Plus die Aktionen zum Beheben.
 
 use std::path::{Path, PathBuf};
@@ -28,6 +28,8 @@ struct RawHost {
     cpu_name: String,
     free_disk_gb: f64,
     last_boot: String,
+    #[serde(default)]
+    warnings: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -67,40 +69,61 @@ pub struct HostInfo {
 }
 
 const DETECT: &str = r#"
+# Jede Abfrage hat einen Ausweichweg: Wird eine davon verweigert (z. B. WMI ohne
+# Adminrechte), liefert sie einen sicheren Standardwert statt die Prüfung abzubrechen.
+$ErrorActionPreference = 'Continue'
+$warn = New-Object System.Collections.Generic.List[string]
+function Try-Get([scriptblock]$block, $default, [string]$what) {
+  try { $r = & $block; if ($null -eq $r) { return $default }; return $r }
+  catch { $warn.Add($what + ': ' + $_.Exception.Message); return $default }
+}
 function Get-FeatureState([string]$name) {
   try {
     $f = Get-WindowsOptionalFeature -Online -FeatureName $name -ErrorAction Stop
     if ($null -eq $f) { return 'unavailable' }
     if ($f.State -eq 'Enabled' -or $f.State -eq 'EnablePending') { return 'enabled' }
     return 'disabled'
-  } catch {
-    $c = Get-CimInstance Win32_OptionalFeature -Filter ('Name=' + [char]39 + $name + [char]39)
-    if ($null -eq $c) { return 'unavailable' }
-    switch ($c.InstallState) { 1 { return 'enabled' } 2 { return 'disabled' } default { return 'unavailable' } }
-  }
+  } catch {}
+  try {
+    $c = Get-CimInstance Win32_OptionalFeature -Filter ('Name=' + [char]39 + $name + [char]39) -ErrorAction Stop
+    if ($null -ne $c) { switch ($c.InstallState) { 1 { return 'enabled' } 2 { return 'disabled' } default { return 'unavailable' } } }
+  } catch { $warn.Add('Windows-Funktion ' + $name + ': ' + $_.Exception.Message) }
+  # Nicht abfragbar: als „aus“ melden – schlimmstenfalls bietet Nestbox das Einschalten an,
+  # und DISM ändert bei einer bereits aktiven Funktion nichts.
+  return 'disabled'
 }
-$os = Get-CimInstance Win32_OperatingSystem
-$cs = Get-CimInstance Win32_ComputerSystem
-$cpu = @(Get-CimInstance Win32_Processor)
-$cv = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
-$free = 0
-try { $free = [System.IO.DriveInfo]::new(__DRIVE__).AvailableFreeSpace } catch {}
-$winHv = $false
-try { $winHv = @(Get-CimInstance Win32_PerfRawData_HvStats_HyperVHypervisor -ErrorAction Stop).Count -gt 0 } catch {}
+$os = Try-Get { Get-CimInstance Win32_OperatingSystem -ErrorAction Stop } $null 'Betriebssystem'
+$cs = Try-Get { Get-CimInstance Win32_ComputerSystem -ErrorAction Stop } $null 'Computer'
+$cpu = @(Try-Get { Get-CimInstance Win32_Processor -ErrorAction Stop } @() 'Prozessor')
+$cv = Try-Get { Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Stop } $null 'Windows-Version'
+$build = [string]$cv.CurrentBuild
+$caption = if ($os) { [string]$os.Caption } else { $n = [string]$cv.ProductName; if ([int]('0' + $build) -ge 22000) { $n -replace 'Windows 10', 'Windows 11' } else { $n } }
+$memBytes = if ($cs) { [double]$cs.TotalPhysicalMemory } else { Try-Get { Add-Type -AssemblyName Microsoft.VisualBasic; [double](New-Object Microsoft.VisualBasic.Devices.ComputerInfo).TotalPhysicalMemory } 0 'Arbeitsspeicher' }
+$cores = if ($cs -and $cs.NumberOfLogicalProcessors) { [uint32]$cs.NumberOfLogicalProcessors } else { [uint32][Environment]::ProcessorCount }
+$cpuName = if ($cpu.Count -gt 0) { ([string]$cpu[0].Name).Trim() } else { [string](Try-Get { (Get-ItemProperty 'HKLM:\HARDWARE\DESCRIPTION\System\CentralProcessor\0' -ErrorAction Stop).ProcessorNameString } 'Unbekannter Prozessor' 'Prozessorname') }
+# Unbekannt = nicht blockieren: Dann meldet VirtualBox beim Start selbst, falls etwas fehlt.
+$virtKnown = $cpu.Count -gt 0
+$fw = if ($virtKnown) { [bool]($cpu | Where-Object { $_.VirtualizationFirmwareEnabled } | Select-Object -First 1) } else { $true }
+$vmx = if ($virtKnown) { [bool]($cpu | Where-Object { $_.VMMonitorModeExtensions } | Select-Object -First 1) } else { $true }
+$free = Try-Get { [System.IO.DriveInfo]::new(__DRIVE__).AvailableFreeSpace } 0 'Speicherplatz'
+$winHv = Try-Get { @(Get-CimInstance Win32_PerfRawData_HvStats_HyperVHypervisor -ErrorAction Stop).Count -gt 0 } $false 'Hypervisor'
+# Startzeit ohne WMI: Der Hochleistungszähler läuft seit dem Hochfahren.
+$boot = if ($os) { $os.LastBootUpTime } else { (Get-Date).AddSeconds(-[System.Diagnostics.Stopwatch]::GetTimestamp() / [System.Diagnostics.Stopwatch]::Frequency) }
 [pscustomobject]@{
-  caption = [string]$os.Caption
+  caption = $caption
   editionId = [string]$cv.EditionID
-  build = [string]$cv.CurrentBuild
+  build = $build
   whpxFeature = Get-FeatureState 'HypervisorPlatform'
-  virtualizationFirmware = [bool]($cpu | Where-Object { $_.VirtualizationFirmwareEnabled } | Select-Object -First 1)
-  vmx = [bool]($cpu | Where-Object { $_.VMMonitorModeExtensions } | Select-Object -First 1)
-  windowsHypervisor = $winHv
-  machine = ([string]$cs.Manufacturer + ' ' + [string]$cs.Model).Trim()
-  totalMemoryMb = [uint64]($cs.TotalPhysicalMemory / 1MB)
-  logicalCores = [uint32]$cs.NumberOfLogicalProcessors
-  cpuName = ([string]$cpu[0].Name).Trim()
+  virtualizationFirmware = $fw
+  vmx = $vmx
+  windowsHypervisor = [bool]$winHv
+  machine = if ($cs) { ([string]$cs.Manufacturer + ' ' + [string]$cs.Model).Trim() } else { '' }
+  totalMemoryMb = [uint64]($memBytes / 1MB)
+  logicalCores = $cores
+  cpuName = $cpuName
   freeDiskGb = [math]::Round($free / 1GB, 1)
-  lastBoot = $os.LastBootUpTime.ToUniversalTime().ToString('o')
+  lastBoot = $boot.ToUniversalTime().ToString('o')
+  warnings = @($warn)
 } | ConvertTo-Json -Compress
 "#;
 
@@ -138,7 +161,14 @@ pub fn detect(settings: &mut Settings) -> AppResult<HostInfo> {
         .map(|c| format!("{}\\", c.as_os_str().to_string_lossy()))
         .unwrap_or_else(|| "C:\\".into());
     let script = DETECT.replace("__DRIVE__", &ps::quote(&drive));
-    let raw: RawHost = ps::run_json("Einrichtung prüfen", &script)?;
+    let raw: RawHost = ps::run_json("Einrichtung prüfen", &script).map_err(|mut e| {
+        e.title = "Nestbox konnte deinen PC nicht prüfen".into();
+        e.hint = "Windows PowerShell wird blockiert (z. B. durch eine Firmen-Richtlinie oder ein Sicherheitsprogramm). Starte Nestbox einmal mit Rechtsklick → „Als Administrator ausführen“. Hilft das nicht, schick die technischen Details an den Entwickler.".into();
+        e
+    })?;
+    for w in &raw.warnings {
+        logger::info(&format!("Einrichtung – Teilprüfung übersprungen: {w}"));
+    }
     Ok(build_info(raw, settings))
 }
 
