@@ -28,8 +28,8 @@ pub fn run() {
         .manage(state)
         .invoke_handler(tauri::generate_handler![
             commands::get_host_info,
-            commands::fix_hyperv_group,
-            commands::fix_enable_feature,
+            commands::install_software,
+            commands::fix_enable_whpx,
             commands::restart_computer,
             commands::get_settings,
             commands::save_settings,
@@ -58,13 +58,13 @@ pub fn run() {
         .expect("Nestbox konnte nicht gestartet werden");
 }
 
+
 /// Tests gegen das echte System. Werden nur auf Wunsch ausgeführt:
 ///   cargo test -- --ignored --nocapture --test-threads=1
 #[cfg(test)]
 mod systemtest {
-    use crate::backend::hyperv::HyperVBackend;
-    use crate::backend::{CreateSpec, VmBackend, VmChanges};
-    use crate::store::{OsFamily, Settings};
+    use crate::backend::{self, qemu::QemuBackend, vbox::VBoxBackend, CreateSpec, VmBackend, VmChanges};
+    use crate::store::{BackendKind, OsFamily, Settings, SnapshotMeta};
 
     #[test]
     #[ignore]
@@ -74,46 +74,80 @@ mod systemtest {
         println!("{}", serde_json::to_string_pretty(&info).unwrap());
     }
 
-    /// Kompletter Ablauf mit einer Test-VM ohne ISO: anlegen, starten, pausieren,
-    /// Sicherungspunkt, ausschalten, ändern, umbenennen, löschen.
     #[test]
     #[ignore]
-    fn hyperv_lebenszyklus() {
-        let dir = std::env::temp_dir().join("nestbox-systemtest");
-        let settings = Settings { vm_dir: dir.to_string_lossy().to_string(), ..Settings::default() };
-        let b = HyperVBackend;
-        let spec = CreateSpec {
-            name: "Nestbox-Systemtest".into(),
-            os_family: OsFamily::Linux,
-            os_id: "custom".into(),
-            iso_path: None,
-            cpus: 1,
-            memory_mb: 512,
-            disk_gb: 1,
-        };
+    fn qemu_installieren() {
+        crate::host::install_software(BackendKind::Qemu).expect("Installation");
+    }
+
+    #[test]
+    #[ignore]
+    fn vbox_installieren() {
+        crate::host::install_software(BackendKind::Virtualbox).expect("Installation");
+    }
+
+    fn test_settings(name: &str) -> Settings {
+        let dir = std::env::temp_dir().join(name);
+        Settings { vm_dir: dir.to_string_lossy().to_string(), ..Settings::default() }
+    }
+
+    fn spec(name: &str) -> CreateSpec {
+        CreateSpec { name: name.into(), os_family: OsFamily::Linux, os_id: "custom".into(), iso_path: None, cpus: 1, memory_mb: 512, disk_gb: 1 }
+    }
+
+    /// Kompletter Ablauf: anlegen, starten, pausieren, Sicherungspunkt, ausschalten,
+    /// wiederherstellen, ändern, umbenennen, löschen.
+    fn lebenszyklus(b: &dyn VmBackend, settings: &Settings, name: &str, can_run: bool) {
         let step = |s: &str, l: &str, st: &str| println!("  [{st}] {s}: {l}");
-        let mut vm = b.create(&spec, &settings, "test-id", &step).expect("anlegen");
-        println!("angelegt: {:?}", vm.hyperv_id);
+        let mut vm = b.create(&spec(name), settings, &uuid::Uuid::new_v4().to_string(), &step).expect("anlegen");
+        println!("angelegt in {}", vm.dir);
         let res = (|| -> Result<(), crate::error::AppError> {
-            b.start(&vm)?;
-            println!("status: {:?}", b.status(std::slice::from_ref(&vm))?);
-            b.pause(&vm)?;
-            println!("pausiert: {:?}", b.status(std::slice::from_ref(&vm))?[0].state);
-            b.resume(&vm)?;
+            if can_run {
+                b.start(&vm)?;
+                std::thread::sleep(std::time::Duration::from_secs(3));
+                println!("läuft: {:?}", b.status(std::slice::from_ref(&vm))?);
+                b.pause(&vm)?;
+                println!("pausiert: {:?}", b.status(std::slice::from_ref(&vm))?[0].state);
+                b.resume(&vm)?;
+            }
             let snap = b.create_snapshot(&vm, "Testpunkt")?;
-            println!("sicherungspunkte: {:?}", b.list_snapshots(&vm)?);
+            println!("sicherungspunkt: {snap:?}");
+            vm.snapshots.push(SnapshotMeta { id: snap.id.clone(), name: snap.name.clone(), created: chrono::Utc::now(), with_state: snap.with_state });
+            println!("liste: {:?}", backend::list_snapshots(&vm));
             b.power_off(&vm)?;
+            println!("aus: {:?}", b.status(std::slice::from_ref(&vm))?[0].state);
             b.restore_snapshot(&vm, &snap.id)?;
             b.power_off(&vm)?;
             b.delete_snapshot(&vm, &snap.id)?;
             b.update(&vm, &VmChanges { cpus: 2, memory_mb: 1024, disk_gb: 2 })?;
-            b.rename(&vm, "Nestbox-Systemtest-2")?;
-            vm.name = "Nestbox-Systemtest-2".into();
-            println!("status: {:?}", b.status(std::slice::from_ref(&vm))?);
+            b.rename(&vm, &format!("{name}-2"))?;
+            vm.name = format!("{name}-2");
+            println!("ende: {:?}", b.status(std::slice::from_ref(&vm))?);
             Ok(())
         })();
         b.delete(&vm, true).expect("löschen");
         println!("gelöscht, Ordner vorhanden: {}", std::path::Path::new(&vm.dir).exists());
         res.expect("Ablauf");
+    }
+
+    #[test]
+    #[ignore]
+    fn qemu_lebenszyklus() {
+        let s = test_settings("nestbox-test-qemu");
+        let mut vm_settings = s.clone();
+        vm_settings.backend = crate::store::BackendChoice::Qemu;
+        let b = QemuBackend::from_settings(&vm_settings).expect("QEMU");
+        lebenszyklus(&b, &s, "Nestbox-Test-QEMU", true);
+    }
+
+    #[test]
+    #[ignore]
+    fn vbox_lebenszyklus() {
+        let s = test_settings("nestbox-test-vbox");
+        let b = VBoxBackend::from_settings(&s).expect("VirtualBox");
+        // Ohne Hardware-Virtualisierung kann VirtualBox nicht starten – dann nur die Verwaltung testen.
+        let mut probe = Settings::default();
+        let can_run = crate::host::detect(&mut probe).map(|h| h.virtualization_enabled).unwrap_or(false);
+        lebenszyklus(&b, &s, "Nestbox-Test-VBox", can_run);
     }
 }

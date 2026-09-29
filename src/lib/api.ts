@@ -40,8 +40,8 @@ async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> 
 
 export const api = {
   hostInfo: () => call<HostInfo>("get_host_info"),
-  fixHypervGroup: () => call<void>("fix_hyperv_group"),
-  enableFeature: (feature: "Microsoft-Hyper-V" | "HypervisorPlatform") => call<void>("fix_enable_feature", { feature }),
+  installSoftware: (kind: BackendKind) => call<void>("install_software", { kind }),
+  enableWhpx: () => call<void>("fix_enable_whpx"),
   restartComputer: () => call<void>("restart_computer"),
 
   getSettings: () => call<Settings>("get_settings"),

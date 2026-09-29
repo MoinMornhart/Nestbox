@@ -1,6 +1,6 @@
 {
   "einrichtung": {
-    "title": "Einrichtung – Hyper-V fehlt noch",
+    "title": "Einrichtung – noch nichts installiert",
     "group": "Bildschirme",
     "order": 1
   },
@@ -8,11 +8,6 @@
     "title": "Einrichtung – alles bereit",
     "group": "Bildschirme",
     "order": 2
-  },
-  "einrichtung-home": {
-    "title": "Einrichtung – Windows Home (QEMU)",
-    "group": "Bildschirme",
-    "order": 3
   },
   "einrichtung-neustart": {
     "title": "Einrichtung – Neustart nötig",
@@ -128,5 +123,10 @@
     "title": "Echte App (Tauri) – Einrichtung auf diesem PC",
     "group": "Echte App",
     "order": 0
+  },
+  "einrichtung-qemu": {
+    "title": "Einrichtung – nur QEMU installiert",
+    "group": "Bildschirme",
+    "order": 3
   }
 }

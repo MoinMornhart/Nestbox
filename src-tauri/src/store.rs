@@ -25,7 +25,7 @@ pub fn default_vm_dir() -> PathBuf {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum BackendKind {
-    Hyperv,
+    Virtualbox,
     Qemu,
 }
 
@@ -33,7 +33,7 @@ pub enum BackendKind {
 #[serde(rename_all = "lowercase")]
 pub enum BackendChoice {
     Auto,
-    Hyperv,
+    Virtualbox,
     Qemu,
 }
 
@@ -97,13 +97,13 @@ pub struct VmRecord {
     pub dir: String,
     pub disk_path: String,
     pub created: chrono::DateTime<chrono::Utc>,
-    /// Hyper-V: VMId (GUID)
+    /// VirtualBox: UUID der VM
     #[serde(default)]
-    pub hyperv_id: Option<String>,
+    pub vbox_id: Option<String>,
     /// QEMU: Port für die QMP-Steuerung
     #[serde(default)]
     pub qmp_port: Option<u16>,
-    /// QEMU: Sicherungspunkte (Hyper-V verwaltet sie selbst)
+    /// Sicherungspunkte mit Name und Datum
     #[serde(default)]
     pub snapshots: Vec<SnapshotMeta>,
 }

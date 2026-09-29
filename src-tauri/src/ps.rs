@@ -95,13 +95,3 @@ pub fn truncate(s: &str, max: usize) -> String {
     }
 }
 
-/// Ist die Fehlermeldung ein Rechteproblem? Dann lohnt sich ein zweiter Versuch mit UAC.
-pub fn is_access_denied(err: &AppError) -> bool {
-    let d = err.details.as_deref().unwrap_or("").to_lowercase();
-    d.contains("access is denied")
-        || d.contains("zugriff verweigert")
-        || d.contains("autorisierungsrichtlinie")
-        || d.contains("authorization policy")
-        || d.contains("0x80070005")
-        || d.contains("keine berechtigung")
-}

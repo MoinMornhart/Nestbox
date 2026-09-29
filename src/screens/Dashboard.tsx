@@ -100,8 +100,8 @@ export function Dashboard({
       <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line bg-bg/80 px-6 backdrop-blur">
         <NestboxLogo size={30} />
         <div className="font-display text-[17px] font-semibold tracking-[-0.01em]">Nestbox</div>
-        <Tooltip text={host.activeBackend === "hyperv" ? "VMs laufen mit Hyper-V, der Virtualisierung von Windows." : "VMs laufen mit QEMU und der Windows-Hypervisor-Plattform."}>
-          <span className="ml-1 rounded-full bg-bg-subtle px-2.5 py-0.5 text-[12px] font-medium text-text-2">{host.activeBackend === "hyperv" ? "Hyper-V" : "QEMU"}</span>
+        <Tooltip text={host.activeBackend === "virtualbox" ? "Neue VMs laufen mit VirtualBox (kostenlos)." : host.qemuAccelerated ? "Neue VMs laufen mit QEMU und der Windows-Hypervisor-Plattform." : "Neue VMs laufen mit QEMU ohne Beschleunigung – das ist langsam."}>
+          <span className="ml-1 rounded-full bg-bg-subtle px-2.5 py-0.5 text-[12px] font-medium text-text-2">{host.activeBackend === "virtualbox" ? "VirtualBox" : "QEMU"}</span>
         </Tooltip>
         <div className="flex-1" />
         <IconButton label="Einstellungen" tooltipSide="bottom" onClick={() => setDialog({ kind: "app-settings" })}>

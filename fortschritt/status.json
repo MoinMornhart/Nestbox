@@ -9,7 +9,7 @@
       "state": "done"
     },
     {
-      "name": "Hyper-V-Backend",
+      "name": "VirtualBox-Backend (statt Hyper-V)",
       "state": "done"
     },
     {
@@ -26,7 +26,7 @@
     },
     {
       "name": "QEMU-Backend",
-      "state": "open"
+      "state": "active"
     },
     {
       "name": "Feinschliff & README",
@@ -34,11 +34,31 @@
     },
     {
       "name": "Test & Start",
-      "state": "active"
+      "state": "open"
     }
   ],
-  "now": "Echte App läuft – teste und fasse zusammen, was auf diesem PC geht",
+  "now": "Warte auf mehr Speicherplatz auf C:, um VirtualBox und QEMU am echten System zu testen",
   "files": [
+    {
+      "path": "README.md",
+      "t": "2026-09-29T10:59:30.418Z"
+    },
+    {
+      "path": "src/screens/Setup.tsx",
+      "t": "2026-09-29T10:59:30.418Z"
+    },
+    {
+      "path": "src-tauri/src/host.rs",
+      "t": "2026-09-29T10:59:30.418Z"
+    },
+    {
+      "path": "src-tauri/src/backend/mod.rs",
+      "t": "2026-09-29T10:59:30.418Z"
+    },
+    {
+      "path": "src-tauri/src/backend/vbox.rs",
+      "t": "2026-09-29T10:59:30.418Z"
+    },
     {
       "path": "src/lib/mock.ts",
       "t": "2026-09-29T10:04:44.821Z"
@@ -48,15 +68,7 @@
       "t": "2026-09-29T10:04:44.821Z"
     },
     {
-      "path": "src/screens/Setup.tsx",
-      "t": "2026-09-29T10:04:44.821Z"
-    },
-    {
       "path": "src-tauri/src/error.rs",
-      "t": "2026-09-29T10:04:44.821Z"
-    },
-    {
-      "path": "src-tauri/src/host.rs",
       "t": "2026-09-29T10:04:44.821Z"
     },
     {
@@ -70,10 +82,6 @@
     {
       "path": "src-tauri/src/commands.rs",
       "t": "2026-09-29T09:49:22.939Z"
-    },
-    {
-      "path": "README.md",
-      "t": "2026-09-29T09:32:02.144Z"
     },
     {
       "path": "scripts/tauri.mjs",
@@ -90,17 +98,33 @@
     {
       "path": "scripts/screenshots.mjs",
       "t": "2026-09-29T06:04:59.854Z"
-    },
-    {
-      "path": "src/App.tsx",
-      "t": "2026-09-29T06:04:59.854Z"
-    },
-    {
-      "path": "src/screens/dialogs.tsx",
-      "t": "2026-09-29T06:04:59.854Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-09-29T10:59:30.418Z",
+      "text": "Alle Vorschaubilder neu aufgenommen"
+    },
+    {
+      "t": "2026-09-29T10:59:30.418Z",
+      "text": "iCloud-Konflikt behoben: iCloud hatte backend/mod.rs in „mod 2.rs“ umbenannt"
+    },
+    {
+      "t": "2026-09-29T10:59:30.418Z",
+      "text": "Erkennung am echten System getestet: erkennt VM ohne Virtualisierung und eine abgebrochene QEMU-Installation"
+    },
+    {
+      "t": "2026-09-29T10:59:30.418Z",
+      "text": "Einrichtung neu: VirtualBox/QEMU per Klick installieren (winget), Erkennung verschachtelter VMs, WHPX optional"
+    },
+    {
+      "t": "2026-09-29T10:59:30.417Z",
+      "text": "Hyper-V komplett entfernt – VirtualBox-Backend (VBoxManage, TPM 2.0 + Secure Boot für Windows 11) neu gebaut"
+    },
+    {
+      "t": "2026-09-29T10:35:24.672Z",
+      "text": "Deine Entscheidung: komplett kostenlos – Hyper-V wird entfernt, Backends sind VirtualBox und QEMU"
+    },
     {
       "t": "2026-09-29T10:04:44.821Z",
       "text": "Echte Desktop-App (npm run tauri dev) gestartet – Einrichtung zeigt die echten Werte dieses PCs"
@@ -230,7 +254,12 @@
       "text": "Projektordner geprüft: leer. Node.js 24 vorhanden, Rust und Visual Studio Build Tools fehlen noch"
     }
   ],
-  "waiting": [],
+  "waiting": [
+    {
+      "t": "2026-09-29T10:59:30.418Z",
+      "text": "Bitte in Proxmox die Festplatte dieser Windows-VM vergrößern (+20–30 GB) und am besten CPU-Typ „host“ einstellen"
+    }
+  ],
   "problems": [
     {
       "t": "2026-09-29T06:09:43.539Z",
@@ -247,7 +276,18 @@
     {
       "t": "2026-09-29T10:04:44.821Z",
       "text": "Auf diesem PC können keine VMs starten: Proxmox reicht die Virtualisierung nicht an dieses Windows durch",
-      "fix": "In Proxmox bei dieser VM Hardware → Prozessoren → Typ „host“ einstellen, VM herunterfahren und neu einschalten"
+      "fix": "In Proxmox bei dieser VM Hardware → Prozessoren → Typ „host“ einstellen, VM herunterfahren und neu einschalten",
+      "solved": "2026-09-29T10:35:24.577Z"
+    },
+    {
+      "t": "2026-09-29T10:59:30.418Z",
+      "text": "Laufwerk C: hat nur noch 0,7 GB frei – QEMU-Installation ist deshalb abgebrochen (unvollständig, 1 GB belegt)",
+      "fix": "Festplatte der Windows-VM in Proxmox um 20–30 GB vergrößern; danach QEMU neu installieren und VirtualBox testen"
+    },
+    {
+      "t": "2026-09-29T10:59:30.418Z",
+      "text": "In dieser Windows-VM ist keine Hardware-Virtualisierung verfügbar – VirtualBox kann hier keine VMs starten",
+      "fix": "In Proxmox CPU-Typ „host“ einstellen (dann laufen auch VirtualBox und schnelles QEMU)"
     }
   ],
   "images": [
@@ -263,20 +303,20 @@
     {
       "file": "einrichtung-dunkel.png",
       "base": "einrichtung",
-      "title": "Einrichtung – Hyper-V fehlt noch",
+      "title": "Einrichtung – noch nichts installiert",
       "group": "Bildschirme",
       "order": 1,
       "theme": "dunkel",
-      "t": "2026-09-29T09:57:11.662Z"
+      "t": "2026-09-29T10:56:48.428Z"
     },
     {
       "file": "einrichtung-hell.png",
       "base": "einrichtung",
-      "title": "Einrichtung – Hyper-V fehlt noch",
+      "title": "Einrichtung – noch nichts installiert",
       "group": "Bildschirme",
       "order": 1,
       "theme": "hell",
-      "t": "2026-09-29T09:57:09.080Z"
+      "t": "2026-09-29T10:56:45.893Z"
     },
     {
       "file": "einrichtung-bereit-dunkel.png",
@@ -285,7 +325,7 @@
       "group": "Bildschirme",
       "order": 2,
       "theme": "dunkel",
-      "t": "2026-09-29T09:57:16.728Z"
+      "t": "2026-09-29T10:56:53.465Z"
     },
     {
       "file": "einrichtung-bereit-hell.png",
@@ -294,25 +334,25 @@
       "group": "Bildschirme",
       "order": 2,
       "theme": "hell",
-      "t": "2026-09-29T09:57:14.186Z"
+      "t": "2026-09-29T10:56:50.933Z"
     },
     {
-      "file": "einrichtung-home-dunkel.png",
-      "base": "einrichtung-home",
-      "title": "Einrichtung – Windows Home (QEMU)",
+      "file": "einrichtung-qemu-dunkel.png",
+      "base": "einrichtung-qemu",
+      "title": "Einrichtung – nur QEMU installiert",
       "group": "Bildschirme",
       "order": 3,
       "theme": "dunkel",
-      "t": "2026-09-29T09:57:22.067Z"
+      "t": "2026-09-29T10:56:58.511Z"
     },
     {
-      "file": "einrichtung-home-hell.png",
-      "base": "einrichtung-home",
-      "title": "Einrichtung – Windows Home (QEMU)",
+      "file": "einrichtung-qemu-hell.png",
+      "base": "einrichtung-qemu",
+      "title": "Einrichtung – nur QEMU installiert",
       "group": "Bildschirme",
       "order": 3,
       "theme": "hell",
-      "t": "2026-09-29T09:57:19.351Z"
+      "t": "2026-09-29T10:56:55.976Z"
     },
     {
       "file": "einrichtung-neustart-dunkel.png",
@@ -321,7 +361,7 @@
       "group": "Bildschirme",
       "order": 4,
       "theme": "dunkel",
-      "t": "2026-09-29T09:57:27.531Z"
+      "t": "2026-09-29T10:57:03.585Z"
     },
     {
       "file": "einrichtung-neustart-hell.png",
@@ -330,7 +370,7 @@
       "group": "Bildschirme",
       "order": 4,
       "theme": "hell",
-      "t": "2026-09-29T09:57:24.787Z"
+      "t": "2026-09-29T10:57:01.063Z"
     },
     {
       "file": "einrichtung-vm-dunkel.png",
@@ -339,7 +379,7 @@
       "group": "Bildschirme",
       "order": 5,
       "theme": "dunkel",
-      "t": "2026-09-29T09:57:33.886Z"
+      "t": "2026-09-29T10:57:09.505Z"
     },
     {
       "file": "einrichtung-vm-hell.png",
@@ -348,7 +388,7 @@
       "group": "Bildschirme",
       "order": 5,
       "theme": "hell",
-      "t": "2026-09-29T09:57:30.694Z"
+      "t": "2026-09-29T10:57:06.582Z"
     },
     {
       "file": "assistent-1-dunkel.png",
@@ -357,7 +397,7 @@
       "group": "Bildschirme",
       "order": 6,
       "theme": "dunkel",
-      "t": "2026-09-29T06:05:30.814Z"
+      "t": "2026-09-29T10:57:14.598Z"
     },
     {
       "file": "assistent-1-hell.png",
@@ -366,7 +406,7 @@
       "group": "Bildschirme",
       "order": 6,
       "theme": "hell",
-      "t": "2026-09-29T06:05:28.010Z"
+      "t": "2026-09-29T10:57:12.044Z"
     },
     {
       "file": "assistent-1-iso-dunkel.png",
@@ -375,7 +415,7 @@
       "group": "Bildschirme",
       "order": 7,
       "theme": "dunkel",
-      "t": "2026-09-29T06:05:35.946Z"
+      "t": "2026-09-29T10:57:19.676Z"
     },
     {
       "file": "assistent-1-iso-hell.png",
@@ -384,7 +424,7 @@
       "group": "Bildschirme",
       "order": 7,
       "theme": "hell",
-      "t": "2026-09-29T06:05:33.397Z"
+      "t": "2026-09-29T10:57:17.161Z"
     },
     {
       "file": "assistent-2-dunkel.png",
@@ -393,7 +433,7 @@
       "group": "Bildschirme",
       "order": 8,
       "theme": "dunkel",
-      "t": "2026-09-29T06:05:41.096Z"
+      "t": "2026-09-29T10:57:24.764Z"
     },
     {
       "file": "assistent-2-hell.png",
@@ -402,7 +442,7 @@
       "group": "Bildschirme",
       "order": 8,
       "theme": "hell",
-      "t": "2026-09-29T06:05:38.491Z"
+      "t": "2026-09-29T10:57:22.226Z"
     },
     {
       "file": "assistent-3-dunkel.png",
@@ -411,7 +451,7 @@
       "group": "Bildschirme",
       "order": 9,
       "theme": "dunkel",
-      "t": "2026-09-29T06:05:46.249Z"
+      "t": "2026-09-29T10:57:29.898Z"
     },
     {
       "file": "assistent-3-hell.png",
@@ -420,7 +460,7 @@
       "group": "Bildschirme",
       "order": 9,
       "theme": "hell",
-      "t": "2026-09-29T06:05:43.696Z"
+      "t": "2026-09-29T10:57:27.336Z"
     },
     {
       "file": "assistent-4-dunkel.png",
@@ -429,7 +469,7 @@
       "group": "Bildschirme",
       "order": 10,
       "theme": "dunkel",
-      "t": "2026-09-29T06:05:51.380Z"
+      "t": "2026-09-29T10:57:34.960Z"
     },
     {
       "file": "assistent-4-hell.png",
@@ -438,7 +478,7 @@
       "group": "Bildschirme",
       "order": 10,
       "theme": "hell",
-      "t": "2026-09-29T06:05:48.830Z"
+      "t": "2026-09-29T10:57:32.427Z"
     },
     {
       "file": "hauptansicht-dunkel.png",
@@ -447,7 +487,7 @@
       "group": "Bildschirme",
       "order": 11,
       "theme": "dunkel",
-      "t": "2026-09-29T06:05:56.731Z"
+      "t": "2026-09-29T10:57:40.102Z"
     },
     {
       "file": "hauptansicht-hell.png",
@@ -456,7 +496,7 @@
       "group": "Bildschirme",
       "order": 11,
       "theme": "hell",
-      "t": "2026-09-29T06:05:53.987Z"
+      "t": "2026-09-29T10:57:37.531Z"
     },
     {
       "file": "hauptansicht-leer-dunkel.png",
@@ -465,7 +505,7 @@
       "group": "Bildschirme",
       "order": 12,
       "theme": "dunkel",
-      "t": "2026-09-29T06:06:01.837Z"
+      "t": "2026-09-29T10:57:45.179Z"
     },
     {
       "file": "hauptansicht-leer-hell.png",
@@ -474,7 +514,7 @@
       "group": "Bildschirme",
       "order": 12,
       "theme": "hell",
-      "t": "2026-09-29T06:05:59.287Z"
+      "t": "2026-09-29T10:57:42.637Z"
     },
     {
       "file": "einstellungen-dunkel.png",
@@ -483,7 +523,7 @@
       "group": "Bildschirme",
       "order": 13,
       "theme": "dunkel",
-      "t": "2026-09-29T06:06:07.100Z"
+      "t": "2026-09-29T10:57:50.361Z"
     },
     {
       "file": "einstellungen-hell.png",
@@ -492,7 +532,7 @@
       "group": "Bildschirme",
       "order": 13,
       "theme": "hell",
-      "t": "2026-09-29T06:06:04.484Z"
+      "t": "2026-09-29T10:57:47.779Z"
     },
     {
       "file": "erstellen-fortschritt-dunkel.png",
@@ -501,7 +541,7 @@
       "group": "Overlays",
       "order": 14,
       "theme": "dunkel",
-      "t": "2026-09-29T06:06:13.123Z"
+      "t": "2026-09-29T10:57:56.374Z"
     },
     {
       "file": "erstellen-fortschritt-hell.png",
@@ -510,7 +550,7 @@
       "group": "Overlays",
       "order": 14,
       "theme": "hell",
-      "t": "2026-09-29T06:06:10.140Z"
+      "t": "2026-09-29T10:57:53.357Z"
     },
     {
       "file": "erstellen-fertig-dunkel.png",
@@ -519,7 +559,7 @@
       "group": "Overlays",
       "order": 15,
       "theme": "dunkel",
-      "t": "2026-09-29T06:06:28.314Z"
+      "t": "2026-09-29T10:58:09.555Z"
     },
     {
       "file": "erstellen-fertig-hell.png",
@@ -528,7 +568,7 @@
       "group": "Overlays",
       "order": 15,
       "theme": "hell",
-      "t": "2026-09-29T06:06:20.733Z"
+      "t": "2026-09-29T10:58:02.972Z"
     },
     {
       "file": "erstellen-fehler-dunkel.png",
@@ -537,7 +577,7 @@
       "group": "Overlays",
       "order": 16,
       "theme": "dunkel",
-      "t": "2026-09-29T06:06:40.444Z"
+      "t": "2026-09-29T10:58:20.395Z"
     },
     {
       "file": "erstellen-fehler-hell.png",
@@ -546,7 +586,7 @@
       "group": "Overlays",
       "order": 16,
       "theme": "hell",
-      "t": "2026-09-29T06:06:34.341Z"
+      "t": "2026-09-29T10:58:14.964Z"
     },
     {
       "file": "kontextmenue-dunkel.png",
@@ -555,7 +595,7 @@
       "group": "Overlays",
       "order": 17,
       "theme": "dunkel",
-      "t": "2026-09-29T06:06:46.416Z"
+      "t": "2026-09-29T10:58:26.294Z"
     },
     {
       "file": "kontextmenue-hell.png",
@@ -564,7 +604,7 @@
       "group": "Overlays",
       "order": 17,
       "theme": "hell",
-      "t": "2026-09-29T06:06:43.446Z"
+      "t": "2026-09-29T10:58:23.348Z"
     },
     {
       "file": "dialog-sicherungspunkte-dunkel.png",
@@ -573,7 +613,7 @@
       "group": "Overlays",
       "order": 18,
       "theme": "dunkel",
-      "t": "2026-09-29T06:06:52.902Z"
+      "t": "2026-09-29T10:58:32.774Z"
     },
     {
       "file": "dialog-sicherungspunkte-hell.png",
@@ -582,7 +622,7 @@
       "group": "Overlays",
       "order": 18,
       "theme": "hell",
-      "t": "2026-09-29T06:06:49.662Z"
+      "t": "2026-09-29T10:58:29.537Z"
     },
     {
       "file": "dialog-wiederherstellen-dunkel.png",
@@ -591,7 +631,7 @@
       "group": "Overlays",
       "order": 19,
       "theme": "dunkel",
-      "t": "2026-09-29T06:06:59.014Z"
+      "t": "2026-09-29T10:58:38.996Z"
     },
     {
       "file": "dialog-wiederherstellen-hell.png",
@@ -600,7 +640,7 @@
       "group": "Overlays",
       "order": 19,
       "theme": "hell",
-      "t": "2026-09-29T06:06:55.912Z"
+      "t": "2026-09-29T10:58:35.819Z"
     },
     {
       "file": "dialog-loeschen-dunkel.png",
@@ -609,7 +649,7 @@
       "group": "Overlays",
       "order": 20,
       "theme": "dunkel",
-      "t": "2026-09-29T06:07:04.979Z"
+      "t": "2026-09-29T10:58:44.988Z"
     },
     {
       "file": "dialog-loeschen-hell.png",
@@ -618,7 +658,7 @@
       "group": "Overlays",
       "order": 20,
       "theme": "hell",
-      "t": "2026-09-29T06:07:02.009Z"
+      "t": "2026-09-29T10:58:42.006Z"
     },
     {
       "file": "dialog-ausschalten-dunkel.png",
@@ -627,7 +667,7 @@
       "group": "Overlays",
       "order": 21,
       "theme": "dunkel",
-      "t": "2026-09-29T06:07:10.152Z"
+      "t": "2026-09-29T10:58:50.222Z"
     },
     {
       "file": "dialog-ausschalten-hell.png",
@@ -636,7 +676,7 @@
       "group": "Overlays",
       "order": 21,
       "theme": "hell",
-      "t": "2026-09-29T06:07:07.553Z"
+      "t": "2026-09-29T10:58:47.642Z"
     },
     {
       "file": "dialog-umbenennen-dunkel.png",
@@ -645,7 +685,7 @@
       "group": "Overlays",
       "order": 22,
       "theme": "dunkel",
-      "t": "2026-09-29T06:07:15.473Z"
+      "t": "2026-09-29T10:58:55.518Z"
     },
     {
       "file": "dialog-umbenennen-hell.png",
@@ -654,7 +694,7 @@
       "group": "Overlays",
       "order": 22,
       "theme": "hell",
-      "t": "2026-09-29T06:07:12.803Z"
+      "t": "2026-09-29T10:58:52.878Z"
     },
     {
       "file": "dialog-vm-einstellungen-dunkel.png",
@@ -663,7 +703,7 @@
       "group": "Overlays",
       "order": 23,
       "theme": "dunkel",
-      "t": "2026-09-29T06:07:20.653Z"
+      "t": "2026-09-29T10:59:00.663Z"
     },
     {
       "file": "dialog-vm-einstellungen-hell.png",
@@ -672,7 +712,7 @@
       "group": "Overlays",
       "order": 23,
       "theme": "hell",
-      "t": "2026-09-29T06:07:18.068Z"
+      "t": "2026-09-29T10:58:58.086Z"
     },
     {
       "file": "fehler-toast-dunkel.png",
@@ -681,7 +721,7 @@
       "group": "Overlays",
       "order": 24,
       "theme": "dunkel",
-      "t": "2026-09-29T06:07:27.978Z"
+      "t": "2026-09-29T10:59:08.030Z"
     },
     {
       "file": "fehler-toast-hell.png",
@@ -690,7 +730,7 @@
       "group": "Overlays",
       "order": 24,
       "theme": "hell",
-      "t": "2026-09-29T06:07:24.319Z"
+      "t": "2026-09-29T10:59:04.368Z"
     },
     {
       "file": "tooltip-dunkel.png",
@@ -699,7 +739,7 @@
       "group": "Overlays",
       "order": 25,
       "theme": "dunkel",
-      "t": "2026-09-29T06:07:34.628Z"
+      "t": "2026-09-29T10:59:14.645Z"
     },
     {
       "file": "tooltip-hell.png",
@@ -708,8 +748,8 @@
       "group": "Overlays",
       "order": 25,
       "theme": "hell",
-      "t": "2026-09-29T06:07:31.292Z"
+      "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-09-29T10:04:44.838Z"
+  "updated": "2026-09-29T10:59:30.434Z"
 }

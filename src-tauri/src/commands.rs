@@ -7,9 +7,9 @@ use serde::Serialize;
 use tauri::ipc::Channel;
 use tauri::State;
 
-use crate::backend::hyperv::HyperVBackend;
 use crate::backend::qemu::QemuBackend;
-use crate::backend::{qmp, CreateProgress, CreateSpec, PowerState, Snapshot, VmBackend, VmChanges, VmStatus};
+use crate::backend::vbox::VBoxBackend;
+use crate::backend::{self as backend, qmp, CreateProgress, CreateSpec, PowerState, Snapshot, VmBackend, VmChanges, VmStatus};
 use crate::error::{AppError, AppResult};
 use crate::host::{self, HostInfo};
 use crate::logger;
@@ -58,7 +58,7 @@ fn save_record(st: &AppState, vm: VmRecord) -> AppResult<()> {
 
 fn backend_for(kind: BackendKind, settings: &Settings) -> AppResult<Box<dyn VmBackend>> {
     Ok(match kind {
-        BackendKind::Hyperv => Box::new(HyperVBackend),
+        BackendKind::Virtualbox => Box::new(VBoxBackend::from_settings(settings)?),
         BackendKind::Qemu => Box::new(QemuBackend::from_settings(settings)?),
     })
 }
@@ -101,20 +101,18 @@ pub async fn get_host_info(state: Shared<'_>) -> AppResult<HostInfo> {
     .await
 }
 
+/// Installiert VirtualBox oder QEMU per winget.
 #[tauri::command]
-pub async fn fix_hyperv_group(state: Shared<'_>) -> AppResult<()> {
-    blocking(&state, |_| host::add_to_hyperv_group()).await
+pub async fn install_software(state: Shared<'_>, kind: BackendKind) -> AppResult<()> {
+    blocking(&state, move |_| host::install_software(kind)).await
 }
 
-/// feature: "Microsoft-Hyper-V" oder "HypervisorPlatform"
+/// Schaltet die Windows-Hypervisor-Plattform (für schnelles QEMU) ein.
 #[tauri::command]
-pub async fn fix_enable_feature(state: Shared<'_>, feature: String) -> AppResult<()> {
-    if feature != "Microsoft-Hyper-V" && feature != "HypervisorPlatform" {
-        return Err(AppError::new("Unbekannte Windows-Funktion", "Bitte melde diesen Fehler."));
-    }
+pub async fn fix_enable_whpx(state: Shared<'_>) -> AppResult<()> {
     blocking(&state, move |st| {
         let mut s = settings(&st);
-        host::enable_feature(&feature, &mut s)?;
+        host::enable_whpx(&mut s)?;
         let mut store = st.store.lock().unwrap_or_else(|e| e.into_inner());
         store.settings.reboot_pending_since = s.reboot_pending_since;
         store.save_settings()
@@ -179,7 +177,7 @@ fn collect_status(st: &AppState) -> Vec<VmStatus> {
         (store.vms.clone(), store.settings.clone())
     };
     let mut out = Vec::new();
-    for kind in [BackendKind::Hyperv, BackendKind::Qemu] {
+    for kind in [BackendKind::Virtualbox, BackendKind::Qemu] {
         let group: Vec<VmRecord> = vms.iter().filter(|v| v.backend == kind).cloned().collect();
         if group.is_empty() {
             continue;
@@ -238,9 +236,7 @@ pub async fn check_vm_name(state: Shared<'_>, name: String, backend: BackendKind
         if store_has {
             return Ok(Some("Du hast schon eine VM mit diesem Namen.".into()));
         }
-        if backend == BackendKind::Hyperv && HyperVBackend::name_exists(n).unwrap_or(false) && except_id.is_none() {
-            return Ok(Some("In Hyper-V gibt es schon eine VM mit diesem Namen.".into()));
-        }
+        let _ = backend;
         if except_id.is_none() {
             let dir = std::path::Path::new(&settings(&st).vm_dir).join(crate::backend::safe_file_name(n));
             if dir.exists() && std::fs::read_dir(&dir).map(|mut d| d.next().is_some()).unwrap_or(false) {
@@ -300,10 +296,6 @@ pub async fn create_vm(state: Shared<'_>, spec: CreateSpec, backend: BackendKind
         send("start", "VM starten", "active");
         ensure_qemu_port(&st, &mut rec)?;
         b.start(&rec)?;
-        if rec.backend == BackendKind::Hyperv {
-            // Bei QEMU öffnet sich das Fenster beim Start von selbst.
-            let _ = b.open_console(&rec);
-        }
         send("start", "VM starten", "done");
         logger::info(&format!("VM „{}“ angelegt und gestartet", rec.name));
 
@@ -318,12 +310,7 @@ pub async fn start_vm(state: Shared<'_>, id: String) -> AppResult<()> {
     blocking(&state, move |st| {
         let mut vm = record(&st, &id)?;
         ensure_qemu_port(&st, &mut vm)?;
-        let b = backend_for(vm.backend, &settings(&st))?;
-        b.start(&vm)?;
-        if vm.backend == BackendKind::Hyperv {
-            let _ = b.open_console(&vm);
-        }
-        Ok(())
+        backend_for(vm.backend, &settings(&st))?.start(&vm)
     })
     .await
 }
@@ -406,7 +393,7 @@ pub async fn delete_vm(state: Shared<'_>, id: String, delete_disk: bool) -> AppR
         // Auch wenn die VM im Backend schon fehlt (oder QEMU deinstalliert wurde): Eintrag trotzdem entfernen.
         let result = match backend_for(vm.backend, &settings(&st)) {
             Ok(b) => b.delete(&vm, delete_disk),
-            Err(_) if delete_disk => crate::backend::hyperv::remove_vm_files(&vm, &[".qcow2", ".vhdx", ".avhdx"]),
+            Err(_) if delete_disk => backend::remove_vm_files(&vm),
             Err(_) => Ok(()),
         };
         {
@@ -423,7 +410,7 @@ pub async fn delete_vm(state: Shared<'_>, id: String, delete_disk: bool) -> AppR
 
 #[tauri::command]
 pub async fn list_snapshots(state: Shared<'_>, id: String) -> AppResult<Vec<Snapshot>> {
-    blocking(&state, move |st| with_backend(&st, &id, |b, vm| b.list_snapshots(vm))).await
+    blocking(&state, move |st| Ok(backend::list_snapshots(&record(&st, &id)?))).await
 }
 
 #[tauri::command]
@@ -436,15 +423,13 @@ pub async fn create_snapshot(state: Shared<'_>, id: String, name: String) -> App
             name.trim().to_string()
         };
         let snap = backend_for(vm.backend, &settings(&st))?.create_snapshot(&vm, &name)?;
-        if vm.backend == BackendKind::Qemu {
-            vm.snapshots.push(SnapshotMeta {
+        vm.snapshots.push(SnapshotMeta {
                 id: snap.id.clone(),
                 name: snap.name.clone(),
                 created: chrono::Utc::now(),
                 with_state: snap.with_state,
             });
-            save_record(&st, vm)?;
-        }
+        save_record(&st, vm)?;
         Ok(snap)
     })
     .await
@@ -465,10 +450,8 @@ pub async fn delete_snapshot(state: Shared<'_>, id: String, snapshot_id: String)
     blocking(&state, move |st| {
         let mut vm = record(&st, &id)?;
         backend_for(vm.backend, &settings(&st))?.delete_snapshot(&vm, &snapshot_id)?;
-        if vm.backend == BackendKind::Qemu {
-            vm.snapshots.retain(|s| s.id != snapshot_id);
-            save_record(&st, vm)?;
-        }
+        vm.snapshots.retain(|s| s.id != snapshot_id);
+        save_record(&st, vm)?;
         Ok(())
     })
     .await

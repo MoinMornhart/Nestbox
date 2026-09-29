@@ -18,9 +18,9 @@ const byText = (page, text) => page.getByRole("button", { name: text }).first();
 
 /** name, Titel, Gruppe, URL-Parameter, optionale Aktionen */
 const SHOTS = [
-  ["einrichtung", "Einrichtung – Hyper-V fehlt noch", "Bildschirme", "?mock=einrichtung"],
+  ["einrichtung", "Einrichtung – noch nichts installiert", "Bildschirme", "?mock=einrichtung"],
   ["einrichtung-bereit", "Einrichtung – alles bereit", "Bildschirme", "?mock=bereit&view=setup"],
-  ["einrichtung-home", "Einrichtung – Windows Home (QEMU)", "Bildschirme", "?mock=home"],
+  ["einrichtung-qemu", "Einrichtung – nur QEMU installiert", "Bildschirme", "?mock=qemu"],
   ["einrichtung-neustart", "Einrichtung – Neustart nötig", "Bildschirme", "?mock=neustart"],
   ["einrichtung-vm", "Einrichtung – Windows läuft selbst in einer VM", "Bildschirme", "?mock=vm",
     async (p) => { await p.getByText("So schaltest du sie ein").first().click(); await p.waitForTimeout(300); }],

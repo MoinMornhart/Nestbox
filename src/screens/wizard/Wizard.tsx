@@ -154,8 +154,8 @@ export function Wizard({
     const expected: [string, string][] = [
       ["folder", "Ordner vorbereiten"],
       ["disk", "Virtuelle Festplatte anlegen"],
-      ["vm", "Virtuelle Maschine anlegen"],
-      ...(backend === "hyperv" ? ([["security", family === "windows" ? "Secure Boot & TPM einrichten" : "Secure Boot einrichten"]] as [string, string][]) : []),
+      ["vm", backend === "virtualbox" ? "Virtuelle Maschine einrichten" : "Virtuelle Maschine anlegen"],
+      ...(backend === "virtualbox" && family === "windows" ? ([["security", "TPM & Secure Boot einrichten"]] as [string, string][]) : []),
       ["iso", "Installationsmedium einlegen"],
       ["start", "VM starten"],
     ];
@@ -279,7 +279,7 @@ export function Wizard({
                     </button>
                   );
                   return blocked ? (
-                    <Tooltip key={o.id} text="Windows 11 verlangt einen TPM-Sicherheitschip. QEMU kann ihn unter Windows nicht bereitstellen – nutze dafür Hyper-V (Windows Pro) oder installiere Linux." wide>
+                    <Tooltip key={o.id} text="Windows 11 verlangt einen TPM-Sicherheitschip. QEMU kann ihn unter Windows nicht bereitstellen – installiere dafür VirtualBox (kostenlos, unter „Einstellungen → Einrichtung erneut prüfen“)." wide>
                       <div className="w-full">{tile}</div>
                     </Tooltip>
                   ) : (
@@ -487,7 +487,7 @@ export function Wizard({
           {step === 3 && phase === "form" && (
             <>
               <StepTitle title="Alles bereit" sub="Prüfe kurz die Übersicht – dann legt Nestbox die VM an und startet sie." />
-              <Summary name={name} osId={osId ?? "custom"} family={family} iso={iso} specLine={specLine} settings={settings} backend={backend} />
+              <Summary name={name} osId={osId ?? "custom"} family={family} iso={iso} specLine={specLine} settings={settings} backend={backend} accelerated={host.qemuAccelerated} />
             </>
           )}
 
@@ -500,7 +500,7 @@ export function Wizard({
                   </span>
                   <h1 className="mt-5 font-display text-[26px] font-semibold tracking-[-0.02em]">„{created?.name}“ läuft</h1>
                   <p className="mt-2 text-[15px] text-text-2">
-                    {backend === "hyperv" ? "Das Fenster der VM öffnet sich gleich." : "Das QEMU-Fenster der VM ist geöffnet."} Folge dort der Installation des Betriebssystems.
+                    Das Fenster der VM ist geöffnet. Folge dort der Installation des Betriebssystems.
                   </p>
                   {family === "windows" && (
                     <div className="mt-5 flex gap-3 rounded-xl border border-line bg-surface p-4 text-left text-[13.5px]">
@@ -618,7 +618,9 @@ function Summary({
   specLine,
   settings,
   backend,
+  accelerated,
 }: {
+  accelerated: boolean;
   name: string;
   osId: string;
   family: OsFamily;
@@ -635,15 +637,15 @@ function Summary({
     ["Speicherort", <span className="selectable break-all">{settings.vmDir}\{name.trim()}</span>],
     [
       "Technik",
-      backend === "hyperv" ? (
+      backend === "virtualbox" ? (
         <span className="inline-flex items-center">
-          Hyper-V, Generation 2 · Secure Boot{family === "windows" ? " · TPM" : ""} · Netzwerk über „Default Switch“
-          <Info text="Generation 2 = moderne UEFI-VM. Secure Boot und TPM sind Sicherheitsfunktionen, die z. B. Windows 11 voraussetzt. Der „Default Switch“ gibt der VM automatisch Internetzugang." />
+          VirtualBox · UEFI{family === "windows" ? " · TPM 2.0 · Secure Boot" : ""} · Internet über deinen PC (NAT)
+          <Info text="UEFI ist die moderne Startart. TPM und Secure Boot sind Sicherheitsfunktionen, die Windows 11 voraussetzt. NAT gibt der VM automatisch Internetzugang." />
         </span>
       ) : (
         <span className="inline-flex items-center">
-          QEMU mit WHPX-Beschleunigung · UEFI · Netzwerk (NAT)
-          <Info text="WHPX ist die Schnittstelle, über die QEMU die Virtualisierung von Windows nutzt. NAT gibt der VM Internetzugang über deinen PC." />
+          QEMU{accelerated ? " mit Beschleunigung (WHPX)" : " ohne Beschleunigung – langsam"} · UEFI · Internet über deinen PC (NAT)
+          <Info text="WHPX ist die Windows-Funktion, über die QEMU schnell läuft. Ohne sie rechnet QEMU alles in Software. NAT gibt der VM Internetzugang über deinen PC." />
         </span>
       ),
     ],

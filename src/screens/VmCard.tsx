@@ -122,7 +122,7 @@ export function VmCard({ vm, busy, onAction, index }: { vm: Vm; busy: string | n
 
       <div className="mt-5 flex items-center gap-2 border-t border-line pt-4">
         {missing ? (
-          <span className="text-[12.5px] text-muted">In {vm.backend === "hyperv" ? "Hyper-V" : "QEMU"} nicht mehr vorhanden</span>
+          <span className="text-[12.5px] text-muted">In {vm.backend === "virtualbox" ? "VirtualBox" : "QEMU"} nicht mehr vorhanden</span>
         ) : off ? (
           <Button variant="primary" size="sm" icon={<Play className="size-3.5 fill-current" />} disabled={!!busy} onClick={() => onAction("start")}>
             Starten

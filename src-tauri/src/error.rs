@@ -25,31 +25,17 @@ impl AppError {
         self
     }
 
-    /// Übersetzt typische PowerShell-/Hyper-V-Fehlermeldungen in einen
+    /// Übersetzt typische PowerShell-Fehlermeldungen in einen
     /// verständlichen Hinweis. `title` beschreibt, was gerade versucht wurde.
     pub fn from_ps(title: impl Into<String>, stderr: &str) -> Self {
         let lower = stderr.to_lowercase();
-        let hint = if lower.contains("autorisierungsrichtlinie")
-            || lower.contains("authorization policy")
-            || lower.contains("zugriff verweigert")
-            || lower.contains("access is denied")
-            || lower.contains("keine berechtigung")
-            || lower.contains("permission")
-        {
-            "Dir fehlen die Rechte für Hyper-V. Öffne „Einrichtung“ und füge dich der Gruppe „Hyper-V-Administratoren“ hinzu – danach einmal ab- und wieder anmelden."
-        } else if lower.contains("is not recognized") || lower.contains("wurde nicht als name") {
-            "Die Hyper-V-Verwaltungswerkzeuge fehlen. Aktiviere Hyper-V vollständig über „Einrichtung“ und starte den PC neu."
+        let hint = if lower.contains("zugriff verweigert") || lower.contains("access is denied") || lower.contains("keine berechtigung") {
+            "Windows hat den Zugriff verweigert. Prüfe, ob der VM-Ordner beschreibbar ist, oder wähle in den Einstellungen einen anderen Ordner."
         } else if lower.contains("nicht genügend arbeitsspeicher")
             || lower.contains("not enough memory")
             || lower.contains("insufficient system resources")
         {
             "Es ist gerade nicht genug freier Arbeitsspeicher da. Schließe andere Programme oder VMs, oder gib der VM in den Einstellungen weniger Arbeitsspeicher."
-        } else if lower.contains("hypervisor is not running")
-            || lower.contains("hypervisor nicht ausgeführt")
-            || lower.contains("hyper-v-komponenten nicht ausgeführt")
-            || lower.contains("hyper-v components is not running")
-        {
-            "Der Windows-Hypervisor läuft nicht. Prüfe unter „Einrichtung“, ob die Virtualisierung aktiv ist (im BIOS/UEFI bzw. – falls dieses Windows selbst eine VM ist – im Host), und starte den PC neu."
         } else if lower.contains("already exists") || lower.contains("bereits vorhanden") || lower.contains("ist bereits") {
             "Es gibt bereits etwas mit diesem Namen. Wähle einen anderen Namen."
         } else if lower.contains("wird von einem anderen prozess verwendet") || lower.contains("being used by another process") {

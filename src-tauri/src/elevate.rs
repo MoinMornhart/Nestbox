@@ -1,6 +1,6 @@
 //! Aktionen mit Administratorrechten – über das Crate `elevated-command`.
 //! Die App selbst läuft ohne Adminrechte; der UAC-Dialog erscheint nur, wenn
-//! eine Aktion ihn wirklich braucht (z. B. Hyper-V aktivieren).
+//! eine Aktion ihn wirklich braucht (z. B. Windows-Hypervisor-Plattform aktivieren).
 //!
 //! Da ein erhöhter Prozess seine Ausgabe nicht an uns zurückgeben kann, schreibt
 //! das Skript sein Ergebnis in eine temporäre Datei, die wir danach lesen.
@@ -100,14 +100,3 @@ pub fn run_ps(what: &str, script: &str) -> AppResult<String> {
     }
 }
 
-/// Startet ein Programm mit Adminrechten, ohne auf das Ende zu warten.
-pub fn spawn_program(program: &str, args: Vec<String>) {
-    let program = program.to_string();
-    std::thread::spawn(move || {
-        let mut cmd = StdCommand::new(&program);
-        cmd.args(args.iter().map(|a| if a.contains(' ') { format!("\"{a}\"") } else { a.clone() }));
-        if let Err(e) = ElevatedCommand::new(cmd).output() {
-            logger::error(&format!("{program} mit Adminrechten starten: {e}"));
-        }
-    });
-}

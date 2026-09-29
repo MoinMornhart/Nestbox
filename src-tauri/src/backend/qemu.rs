@@ -1,21 +1,19 @@
 //! QEMU-Backend (Fallback für Windows Home) mit WHPX-Beschleunigung,
 //! UEFI (OVMF/edk2), qcow2-Festplatten und Steuerung über QMP.
 
-use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-use serde::Deserialize;
 use serde_json::json;
 
 use super::qmp::{self, Qmp};
-use super::{safe_file_name, CreateSpec, PowerState, Progress, Snapshot, VmBackend, VmChanges, VmStatus};
+use super::{bring_to_front, cpu_percent, process_info, remove_vm_files, safe_file_name};
+use super::{CreateSpec, PowerState, Progress, Snapshot, VmBackend, VmChanges, VmStatus};
 use crate::error::{AppError, AppResult};
 use crate::host::find_qemu;
 use crate::logger;
-use crate::ps::{self, hidden_command, quote};
+use crate::ps::hidden_command;
 use crate::store::{BackendKind, OsFamily, Settings, VmRecord};
 
 pub struct QemuBackend {
@@ -33,18 +31,6 @@ pub fn firmware_paths(qemu_exe: &Path) -> Option<(PathBuf, PathBuf)> {
         }
     }
     None
-}
-
-/// Merkt sich die CPU-Zeit der QEMU-Prozesse, um daraus die Auslastung zu berechnen.
-static CPU_SAMPLES: Mutex<Option<HashMap<u32, (u64, Instant)>>> = Mutex::new(None);
-
-#[derive(Deserialize)]
-struct RawProc {
-    pid: u32,
-    cmd: String,
-    cpu: u64,
-    mem: u64,
-    up: u64,
 }
 
 fn not_installed() -> AppError {
@@ -253,20 +239,6 @@ impl QemuBackend {
         false
     }
 
-    fn process_info(ids: &[&str]) -> Vec<RawProc> {
-        if ids.is_empty() {
-            return vec![];
-        }
-        let script = "$r = @(Get-CimInstance Win32_Process -Filter 'Name=''qemu-system-x86_64.exe''' | ForEach-Object {\r\n\
-             [pscustomobject]@{ pid = [uint32]$_.ProcessId; cmd = [string]$_.CommandLine; cpu = [uint64]($_.KernelModeTime + $_.UserModeTime); mem = [uint64]($_.WorkingSetSize / 1MB); up = [uint64]((Get-Date) - $_.CreationDate).TotalSeconds }\r\n\
-           })\r\n\
-           ConvertTo-Json -InputObject $r -Compress";
-        ps::run_quiet(script)
-            .ok()
-            .and_then(|o| serde_json::from_str::<Vec<RawProc>>(if o.is_empty() { "[]" } else { &o }).ok())
-            .unwrap_or_default()
-    }
-
     fn snapshot_img(&self, vm: &VmRecord, op: &str, tag: &str, what: &str) -> AppResult<()> {
         self.run_img(what, &["snapshot", op, tag, &vm.disk_path])?;
         let vars = Self::vars_path(vm);
@@ -342,7 +314,7 @@ impl VmBackend for QemuBackend {
             dir: dir.to_string_lossy().to_string(),
             disk_path: disk.to_string_lossy().to_string(),
             created: chrono::Utc::now(),
-            hyperv_id: None,
+            vbox_id: None,
             qmp_port: Some(qmp::free_port()),
             snapshots: vec![],
         })
@@ -399,14 +371,7 @@ impl VmBackend for QemuBackend {
             return Err(AppError::new(format!("„{}“ läuft gerade nicht", vm.name), "Starte die VM, dann öffnet sich ihr Fenster automatisch."));
         }
         // Das QEMU-Fenster existiert bereits – in den Vordergrund holen.
-        ps::run(
-            "VM-Fenster anzeigen",
-            &format!(
-                "$p = Get-CimInstance Win32_Process -Filter 'Name=''qemu-system-x86_64.exe''' | Where-Object {{ $_.CommandLine -like ('*' + {} + '*') }} | Select-Object -First 1\r\n\
-                 if ($null -ne $p) {{ $null = (New-Object -ComObject WScript.Shell).AppActivate([int]$p.ProcessId) }}",
-                quote(&vm.id)
-            ),
-        )?;
+        bring_to_front("qemu-system-x86_64.exe", &vm.id)?;
         Ok(())
     }
 
@@ -429,34 +394,16 @@ impl VmBackend for QemuBackend {
             states.push((vm.id.clone(), state));
         }
 
-        let running: Vec<&str> =
-            states.iter().filter(|(_, s)| *s != PowerState::Off).map(|(id, _)| id.as_str()).collect();
-        let procs = Self::process_info(&running);
-        let cores = std::thread::available_parallelism().map(|n| n.get() as f64).unwrap_or(1.0);
-        let mut samples = CPU_SAMPLES.lock().unwrap_or_else(|e| e.into_inner());
-        let samples = samples.get_or_insert_with(HashMap::new);
-        let now = Instant::now();
-
+        let any_running = states.iter().any(|(_, s)| *s != PowerState::Off);
+        let procs = if any_running { process_info("qemu-system-x86_64.exe") } else { vec![] };
         Ok(states
             .into_iter()
             .map(|(id, state)| {
-                let proc_ = procs.iter().find(|p| p.cmd.contains(&id));
-                let (cpu_percent, mem, up) = match proc_ {
-                    Some(p) => {
-                        let pct = match samples.get(&p.pid) {
-                            Some((prev_cpu, prev_t)) => {
-                                let wall = now.duration_since(*prev_t).as_secs_f64();
-                                let used = p.cpu.saturating_sub(*prev_cpu) as f64 / 10_000_000.0;
-                                if wall > 0.0 { (used / wall / cores * 100.0).clamp(0.0, 100.0) } else { 0.0 }
-                            }
-                            None => 0.0,
-                        };
-                        samples.insert(p.pid, (p.cpu, now));
-                        (pct, p.mem, p.up)
-                    }
+                let (cpu, mem, up) = match procs.iter().find(|p| p.cmd.contains(&id)) {
+                    Some(p) => (cpu_percent(p.pid, p.cpu), p.mem, p.up),
                     None => (0.0, 0, 0),
                 };
-                VmStatus { id, state, cpu_percent: (cpu_percent * 10.0).round() / 10.0, memory_used_mb: mem, uptime_seconds: up }
+                VmStatus { id, state, cpu_percent: cpu, memory_used_mb: mem, uptime_seconds: up }
             })
             .collect())
     }
@@ -486,19 +433,9 @@ impl VmBackend for QemuBackend {
             self.power_off(vm)?;
         }
         if delete_disk {
-            super::hyperv::remove_vm_files(vm, &[".qcow2"])?;
+            remove_vm_files(vm)?;
         }
         Ok(())
-    }
-
-    fn list_snapshots(&self, vm: &VmRecord) -> AppResult<Vec<Snapshot>> {
-        let mut list: Vec<Snapshot> = vm
-            .snapshots
-            .iter()
-            .map(|s| Snapshot { id: s.id.clone(), name: s.name.clone(), created: s.created.to_rfc3339(), with_state: s.with_state })
-            .collect();
-        list.sort_by(|a, b| b.created.cmp(&a.created));
-        Ok(list)
     }
 
     fn create_snapshot(&self, vm: &VmRecord, name: &str) -> AppResult<Snapshot> {

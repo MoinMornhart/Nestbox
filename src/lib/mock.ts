@@ -1,5 +1,5 @@
 // Mock-Modus: simuliert das Tauri-Backend im Browser (npm run dev).
-// Szenario per URL wählbar: ?mock=bereit | leer | einrichtung | home | neustart
+// Szenario per URL wählbar: ?mock=bereit | leer | einrichtung | qemu | vm | neustart
 // Fehler erzwingen: ?fail=start (bzw. create, snapshot, …)
 import type { AppError, BackendKind, CreateProgress, CreateSpec, HostInfo, Settings, Snapshot, Vm, VmStatus } from "./types";
 
@@ -11,59 +11,63 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const now = Date.now();
 const iso = (minsAgo: number) => new Date(now - minsAgo * 60_000).toISOString();
 
+const VBOX = "C:\\Program Files\\Oracle\\VirtualBox\\VBoxManage.exe";
+const QEMU = "C:\\Program Files\\qemu\\qemu-system-x86_64.exe";
+
 const baseHost: HostInfo = {
-  windowsName: "Windows 11 Pro",
-  editionId: "Professional",
+  windowsName: "Windows 11 Home",
+  editionId: "Core",
   build: "26200",
-  isHome: false,
-  hypervFeature: "enabled",
-  hypervModule: true,
-  vmmsRunning: true,
-  whpxFeature: "enabled",
+  isHome: true,
+  whpxFeature: "disabled",
   virtualizationEnabled: true,
-  hypervisorPresent: true,
-  windowsHypervisorRunning: true,
+  windowsHypervisorRunning: false,
   isVirtualMachine: false,
   machineName: "LENOVO ThinkPad T14s",
-  hypervGroupOk: true,
-  hypervGroupNeedsRelogin: false,
-  isAdmin: true,
+  vboxPath: VBOX,
+  vboxVersion: "7.1.4r165100",
   qemuPath: null,
   qemuFirmware: false,
+  qemuBroken: false,
+  qemuAccelerated: false,
+  wingetAvailable: true,
   totalMemoryMb: 32768,
   logicalCores: 16,
   cpuName: "AMD Ryzen 7 7840U",
   freeDiskGb: 412.5,
   rebootPending: false,
-  hypervReady: true,
+  vboxReady: true,
   qemuReady: false,
-  activeBackend: "hyperv",
+  activeBackend: "virtualbox",
   backendChoice: "auto",
 };
 
 let host: HostInfo = { ...baseHost };
 if (scenario === "einrichtung") {
-  host = { ...host, hypervFeature: "disabled", hypervModule: false, vmmsRunning: false, hypervGroupOk: false, hypervReady: false, hypervisorPresent: false };
-} else if (scenario === "home") {
+  // Frischer PC: weder VirtualBox noch QEMU installiert
+  host = { ...host, vboxPath: null, vboxVersion: null, vboxReady: false };
+} else if (scenario === "qemu") {
+  // Nur QEMU installiert, Windows-Hypervisor-Plattform noch aus
+  host = { ...host, vboxPath: null, vboxVersion: null, vboxReady: false, qemuPath: QEMU, qemuFirmware: true, qemuReady: true, activeBackend: "qemu" };
+} else if (scenario === "vm") {
+  // Windows läuft selbst in einer VM ohne durchgereichte Virtualisierung
   host = {
     ...host,
-    windowsName: "Windows 11 Home",
-    editionId: "Core",
-    isHome: true,
-    hypervFeature: "unavailable",
-    hypervModule: false,
-    vmmsRunning: false,
-    hypervGroupOk: false,
-    hypervReady: false,
-    whpxFeature: "disabled",
-    activeBackend: "qemu",
-    totalMemoryMb: 16384,
-    logicalCores: 8,
+    windowsName: "Windows 11 Pro",
+    editionId: "Professional",
+    isHome: false,
+    virtualizationEnabled: false,
+    isVirtualMachine: true,
+    machineName: "QEMU Standard PC (Q35 + ICH9, 2009)",
+    cpuName: "QEMU Virtual CPU version 2.5+",
+    vboxPath: null,
+    vboxVersion: null,
+    vboxReady: false,
+    logicalCores: 6,
+    totalMemoryMb: 14932,
   };
-} else if (scenario === "vm") {
-  host = { ...host, virtualizationEnabled: false, windowsHypervisorRunning: false, isVirtualMachine: true, machineName: "QEMU Standard PC (Q35 + ICH9, 2009)", cpuName: "QEMU Virtual CPU version 2.5+", hypervReady: false, hypervGroupOk: false, logicalCores: 6, totalMemoryMb: 14932 };
 } else if (scenario === "neustart") {
-  host = { ...host, hypervReady: false, rebootPending: true, hypervGroupOk: false, hypervGroupNeedsRelogin: true };
+  host = { ...host, vboxPath: null, vboxVersion: null, vboxReady: false, qemuPath: QEMU, qemuFirmware: true, qemuReady: false, rebootPending: true, activeBackend: "qemu" };
 }
 
 let settings: Settings = {
@@ -90,7 +94,7 @@ function vm(p: Partial<Vm> & Pick<Vm, "id" | "name" | "osId" | "osFamily">, st: 
     memoryMb: 8192,
     diskGb: 64,
     dir: `C:\\Users\\Demo\\Nestbox\\VMs\\${p.name}`,
-    diskPath: `C:\\Users\\Demo\\Nestbox\\VMs\\${p.name}\\Virtual Hard Disks\\${p.name}.vhdx`,
+    diskPath: `C:\\Users\\Demo\\Nestbox\\VMs\\${p.name}\\${p.name}.vdi`,
     created: iso(60 * 24 * 3),
     snapshots: [],
     ...p,
@@ -99,7 +103,7 @@ function vm(p: Partial<Vm> & Pick<Vm, "id" | "name" | "osId" | "osFamily">, st: 
 }
 
 let vms: Vm[] =
-  ["leer", "einrichtung", "home", "neustart", "vm"].includes(scenario)
+  ["leer", "einrichtung", "qemu", "neustart", "vm"].includes(scenario)
     ? []
     : [
         vm({ id: "a1", name: "Ubuntu 24.04", osId: "ubuntu", osFamily: "linux", cpus: 4, memoryMb: 8192, isoPath: "C:\\Users\\Demo\\Downloads\\ubuntu-24.04.3-desktop-amd64.iso" }, "running", 23, 6120),
@@ -125,7 +129,7 @@ function maybeFail(what: string) {
     throw err(
       "Die VM konnte nicht gestartet werden",
       "Es ist gerade nicht genug freier Arbeitsspeicher da. Schließe andere Programme oder VMs, oder gib der VM in den Einstellungen weniger Arbeitsspeicher.",
-      "Start-VM : 'Ubuntu 24.04' konnte nicht gestartet werden. (ID der virtuellen Maschine 3F2A9C1E-…)\n'Ubuntu 24.04' konnte nicht initialisiert werden.\nNicht genügend Arbeitsspeicher im System, um den virtuellen Computer 'Ubuntu 24.04' zu starten.\n    + CategoryInfo          : NotSpecified: (:) [Start-VM], VirtualizationException\n    + FullyQualifiedErrorId : OutOfMemory,Microsoft.HyperV.PowerShell.Commands.StartVM",
+      "VBoxManage.exe: error: The VM session was aborted.\nVBoxManage.exe: error: Not enough memory to start the VM (VERR_NO_MEMORY)\nVBoxManage.exe: error: Details: code E_FAIL (0x80004005), component SessionMachine, interface ISession",
     );
   }
 }
@@ -158,11 +162,12 @@ export async function mockCall<T>(cmd: string, args: Record<string, unknown> = {
     case "get_host_info":
       await wait(700);
       return { ...host, backendChoice: settings.backend } as T;
-    case "fix_hyperv_group":
-      await wait(900);
-      host = { ...host, hypervGroupOk: false, hypervGroupNeedsRelogin: true };
+    case "install_software":
+      await wait(2500);
+      if (args.kind === "virtualbox") host = { ...host, vboxPath: VBOX, vboxVersion: "7.1.4r165100", vboxReady: host.virtualizationEnabled, activeBackend: "virtualbox" };
+      else host = { ...host, qemuPath: QEMU, qemuFirmware: true, qemuReady: true, activeBackend: host.vboxReady ? host.activeBackend : "qemu" };
       return undefined as T;
-    case "fix_enable_feature":
+    case "fix_enable_whpx":
       await wait(1400);
       host = { ...host, rebootPending: true };
       return undefined as T;
@@ -260,7 +265,7 @@ export async function mockCreate(spec: CreateSpec, backend: BackendKind, onProgr
     ["folder", "Ordner vorbereiten"],
     ["disk", "Virtuelle Festplatte anlegen"],
     ["vm", "Virtuelle Maschine anlegen"],
-    ...(backend === "hyperv" ? ([["security", "Sicherheit einrichten"]] as [string, string][]) : []),
+    ...(backend === "virtualbox" && spec.osFamily === "windows" ? ([["security", "TPM & Secure Boot einrichten"]] as [string, string][]) : []),
     ["iso", "Installationsmedium einlegen"],
     ["start", "VM starten"],
   ];
@@ -268,11 +273,11 @@ export async function mockCreate(spec: CreateSpec, backend: BackendKind, onProgr
   for (const [step, label] of steps) {
     onProgress({ step, label, state: "active" });
     await wait(slow ? 60_000 : 650);
-    if (failOn === "create" && step === "security") {
+    if (failOn === "create" && step === "vm") {
       throw err(
-        "Sicherheit einrichten",
-        "Dir fehlen die Rechte für Hyper-V. Öffne „Einrichtung“ und füge dich der Gruppe „Hyper-V-Administratoren“ hinzu – danach einmal ab- und wieder anmelden.",
-        "Set-VMKeyProtector : Der Vorgang wurde von der Autorisierungsrichtlinie abgelehnt.",
+        "Virtuelle Maschine einrichten",
+        "Es ist gerade nicht genug freier Arbeitsspeicher da. Schließe andere Programme oder VMs, oder gib der VM weniger Arbeitsspeicher.",
+        "VBoxManage.exe: error: Not enough memory to start the VM (VERR_NO_MEMORY)\nVBoxManage.exe: error: Details: code E_FAIL (0x80004005), component ConsoleWrap, interface IConsole",
       );
     }
     onProgress({ step, label, state: "done" });

@@ -378,7 +378,7 @@ export function VmSettingsDialog({ vm, host, onClose, onDone }: { vm: Vm; host: 
         />
       </div>
       <div className="mt-5 space-y-1 rounded-xl bg-bg-subtle p-3.5 text-[12.5px] text-text-2">
-        <Row k="Technik" v={vm.backend === "hyperv" ? "Hyper-V" : "QEMU"} />
+        <Row k="Technik" v={vm.backend === "virtualbox" ? "VirtualBox" : "QEMU"} />
         <Row k="Installationsmedium" v={vm.isoPath ? vm.isoPath.split("\\").pop()! : "keines"} />
         <Row
           k="Dateien"
@@ -481,8 +481,8 @@ export function AppSettingsDialog({
         title="Virtualisierung"
         sub={
           <>
-            „Automatisch“ nutzt Hyper-V, wenn dein Windows es enthält, sonst QEMU.
-            <Info text="Hyper-V ist in Windows Pro/Enterprise/Education eingebaut. QEMU ist ein eigenständiges, kostenloses Programm und funktioniert auch unter Windows Home." />
+            „Automatisch“ nutzt VirtualBox, wenn es installiert ist, sonst QEMU. Bestehende VMs behalten ihre Technik.
+            <Info text="Beide Programme sind kostenlos und laufen auf jeder Windows-Version. VirtualBox kann zusätzlich Windows 11 als Gast." />
           </>
         }
       >
@@ -491,7 +491,7 @@ export function AppSettingsDialog({
           onChange={(b) => setDraft({ ...draft, backend: b })}
           options={[
             { value: "auto", label: "Automatisch" },
-            ...(host.isHome ? [] : [{ value: "hyperv" as const, label: "Hyper-V" }]),
+            { value: "virtualbox", label: "VirtualBox" },
             { value: "qemu", label: "QEMU" },
           ]}
         />
@@ -535,7 +535,7 @@ export function AppSettingsDialog({
 
       <div className="mb-2 mt-6 flex items-center gap-3 border-t border-line pt-5 text-[12.5px] text-muted">
         <NestboxLogo size={22} />
-        Nestbox 1.0 · {host.windowsName} · {host.activeBackend === "hyperv" ? "Hyper-V" : "QEMU"}
+        Nestbox 1.0 · {host.windowsName} · {host.activeBackend === "virtualbox" ? "VirtualBox" : "QEMU"}
       </div>
       {error && <ErrorPanel error={error} />}
     </Dialog>

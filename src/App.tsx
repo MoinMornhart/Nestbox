@@ -53,7 +53,7 @@ export default function App() {
     (async () => {
       try {
         const { h, s } = await recheck();
-        const ready = h.activeBackend === "hyperv" ? h.hypervReady : h.qemuReady;
+        const ready = h.vboxReady || h.qemuReady;
         setView(forcedView ?? (s.setupDone && ready ? "dashboard" : "setup"));
       } catch (e) {
         setFatal(e as AppError);

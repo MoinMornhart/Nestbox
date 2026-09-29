@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
-import { AlertTriangle, ArrowRight, Check, ChevronRight, Cpu, ExternalLink, FolderOpen, Info as InfoIcon, RefreshCw, RotateCcw, ShieldCheck, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, ChevronRight, Cpu, Download, ExternalLink, FolderOpen, Info as InfoIcon, RefreshCw, RotateCcw, X, Zap } from "lucide-react";
 import { api, openLink, pickFolder } from "../lib/api";
-import type { AppError, HostInfo, Settings } from "../lib/types";
+import type { AppError, BackendKind, HostInfo, Settings } from "../lib/types";
 import { Button, Dialog, cx, Info } from "../components/ui";
 import { ErrorPanel } from "../components/feedback";
 import { NestboxLogo } from "../components/Logo";
@@ -10,7 +10,7 @@ type CheckState = "ok" | "warn" | "error" | "info";
 
 interface Check {
   id: string;
-  title: string;
+  title: ReactNode;
   state: CheckState;
   text: ReactNode;
   action?: ReactNode;
@@ -18,6 +18,7 @@ interface Check {
   stepsLabel?: string;
 }
 
+const VBOX_URL = "https://www.virtualbox.org/wiki/Downloads";
 const QEMU_URL = "https://www.qemu.org/download/#windows";
 
 export function Setup({
@@ -38,8 +39,7 @@ export function Setup({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<AppError | null>(null);
   const [confirmRestart, setConfirmRestart] = useState(false);
-  const hv = host.activeBackend === "hyperv";
-  const ready = hv ? host.hypervReady : host.qemuReady;
+  const ready = host.vboxReady || host.qemuReady;
 
   const run = async (id: string, fn: () => Promise<unknown>) => {
     setBusy(id);
@@ -54,170 +54,149 @@ export function Setup({
     }
   };
 
+  const install = (kind: BackendKind, url: string) => (
+    <div className="flex flex-wrap gap-2">
+      {host.wingetAvailable && (
+        <Button size="sm" variant="primary" loading={busy === kind} disabled={!!busy && busy !== kind} icon={<Download className="size-3.5" />} onClick={() => run(kind, () => api.installSoftware(kind))}>
+          {busy === kind ? "Wird installiert …" : "Jetzt installieren"}
+        </Button>
+      )}
+      <Button size="sm" variant={host.wingetAvailable ? "ghost" : "primary"} icon={<ExternalLink className="size-3.5" />} onClick={() => openLink(url)}>
+        Download-Seite
+      </Button>
+    </div>
+  );
+
   const biosSteps = [
     "PC neu starten und beim Hochfahren wiederholt die BIOS-Taste drücken (meist Entf, F2 oder F10).",
     "Im BIOS/UEFI nach „Intel VT-x“, „Intel Virtualization Technology“, „AMD-V“ oder „SVM Mode“ suchen (oft unter „Advanced“ oder „CPU Configuration“).",
     "Die Option auf „Enabled“ stellen, speichern (meist F10) und neu starten.",
   ];
-
-  const checks: Check[] = [];
-  checks.push({
-    id: "edition",
-    title: host.windowsName,
-    state: hv && host.isHome ? "error" : "ok",
-    text: hv
-      ? host.isHome
-        ? "Windows Home enthält kein Hyper-V. Nutze stattdessen QEMU (unten umschalten)."
-        : "Enthält Hyper-V – Nestbox nutzt die Virtualisierung von Windows selbst."
-      : host.isHome
-        ? "Windows Home hat kein Hyper-V – Nestbox nutzt dafür QEMU."
-        : "Nestbox nutzt QEMU als Virtualisierung.",
-  });
   const nestedSteps = [
     "Proxmox: VM auswählen → Hardware → Prozessoren → Typ auf „host“ stellen.",
     "Hyper-V als Host: in einer Admin-PowerShell „Set-VMProcessor -VMName <Name> -ExposeVirtualizationExtensions $true“ ausführen.",
     "VMware: in den VM-Einstellungen beim Prozessor „Intel VT-x/EPT oder AMD-V/RVI virtualisieren“ anhaken.",
     "Danach diese VM komplett herunterfahren (nicht nur neu starten) und wieder einschalten.",
   ];
-  checks.push(
-    host.isVirtualMachine
-      ? {
-          id: "bios",
-          title: "Verschachtelte Virtualisierung",
-          state: host.virtualizationEnabled ? "ok" : "error",
-          text: host.virtualizationEnabled ? (
-            "Dein Windows läuft selbst in einer VM – der Host reicht die Virtualisierung durch."
-          ) : (
-            <>
-              Dein Windows läuft selbst in einer virtuellen Maschine ({host.machineName}). Damit darin wieder VMs laufen können, muss der Host die Virtualisierung an diese VM durchreichen.
-              <Info text="Das nennt man „verschachtelte Virtualisierung“ (nested virtualization): Eine VM, in der wieder VMs laufen. Der Prozessor muss dafür seine Virtualisierungsbefehle an die innere VM weitergeben." />
-            </>
-          ),
-          steps: host.virtualizationEnabled ? undefined : nestedSteps,
-          stepsLabel: "So schaltest du sie ein",
-        }
-      : {
-          id: "bios",
-          title: "Virtualisierung im BIOS",
-          state: host.virtualizationEnabled ? "ok" : "error",
-          text: host.virtualizationEnabled
-            ? "Dein Prozessor darf virtuelle Maschinen ausführen."
-            : "Die Virtualisierung ist im BIOS/UEFI ausgeschaltet. Ohne sie laufen keine VMs.",
-          steps: host.virtualizationEnabled ? undefined : biosSteps,
-        },
-  );
 
-  if (hv) {
-    const featureOk = host.hypervFeature === "enabled" && host.hypervModule;
-    checks.push({
-      id: "hyperv",
-      title: "Hyper-V",
-      state: host.hypervFeature === "unavailable" ? "error" : !featureOk ? "error" : !host.vmmsRunning || !host.windowsHypervisorRunning ? "warn" : "ok",
-      text:
-        host.hypervFeature === "unavailable"
-          ? "Hyper-V gibt es in dieser Windows-Version nicht. Wechsle unten zu QEMU."
-          : host.hypervFeature === "disabled"
-            ? "Hyper-V ist noch ausgeschaltet. Nestbox kann es für dich einschalten – danach ist ein Neustart nötig."
-            : !host.hypervModule
-              ? "Hyper-V ist an, aber die Verwaltungswerkzeuge fehlen. Nestbox kann sie nachinstallieren."
-              : !host.vmmsRunning
-                ? "Hyper-V ist eingeschaltet, läuft aber noch nicht. Starte den PC einmal neu."
-                : !host.windowsHypervisorRunning
-                  ? host.virtualizationEnabled
-                    ? "Hyper-V ist eingeschaltet, der Hypervisor startet aber nicht. Starte den PC neu; hilft das nicht, führe in einer Admin-Eingabeaufforderung „bcdedit /set hypervisorlaunchtype auto“ aus und starte erneut."
-                    : "Hyper-V ist eingeschaltet, kann aber erst laufen, wenn die Virtualisierung (siehe oben) aktiv ist."
-                  : "Ist eingeschaltet und läuft.",
-      action:
-        host.hypervFeature !== "unavailable" && !featureOk ? (
-          <Button size="sm" variant="primary" loading={busy === "hyperv"} icon={<ShieldCheck className="size-4" />} onClick={() => run("hyperv", () => api.enableFeature("Microsoft-Hyper-V"))}>
-            Hyper-V aktivieren
-          </Button>
-        ) : undefined,
-    });
-    checks.push({
-      id: "group",
-      title: "Berechtigung",
-      state: host.hypervGroupOk ? "ok" : host.hypervGroupNeedsRelogin ? "warn" : "error",
-      text: host.hypervGroupOk ? (
-        "Du darfst VMs ohne Admin-Abfrage verwalten."
-      ) : host.hypervGroupNeedsRelogin ? (
-        "Fast geschafft: Melde dich einmal von Windows ab und wieder an, damit die neue Berechtigung gilt."
+  const checks: Check[] = [];
+
+  // 1. Virtualisierung
+  checks.push({
+    id: "virt",
+    title: host.isVirtualMachine ? "Verschachtelte Virtualisierung" : "Virtualisierung im BIOS",
+    state: host.virtualizationEnabled ? "ok" : host.qemuReady ? "warn" : "error",
+    text: host.virtualizationEnabled ? (
+      host.isVirtualMachine ? "Dein Windows läuft selbst in einer VM – der Host reicht die Virtualisierung durch." : "Dein Prozessor darf virtuelle Maschinen ausführen."
+    ) : (
+      <>
+        {host.isVirtualMachine ? (
+          <>
+            Dein Windows läuft selbst in einer virtuellen Maschine ({host.machineName}). Der Host reicht die Virtualisierung nicht durch.
+            <Info text="Das nennt man „verschachtelte Virtualisierung“ (nested virtualization): eine VM, in der wieder VMs laufen. Der Prozessor muss dafür seine Virtualisierungsbefehle an die innere VM weitergeben." />
+          </>
+        ) : (
+          "Die Virtualisierung ist im BIOS/UEFI ausgeschaltet."
+        )}{" "}
+        Bis das behoben ist, funktioniert nur QEMU – und zwar sehr langsam.
+      </>
+    ),
+    steps: host.virtualizationEnabled ? undefined : host.isVirtualMachine ? nestedSteps : biosSteps,
+    stepsLabel: "So schaltest du sie ein",
+  });
+
+  // 2. VirtualBox
+  checks.push({
+    id: "vbox",
+    title: (
+      <span className="inline-flex items-center gap-2">
+        VirtualBox
+        <span className="rounded-full bg-accent-soft px-2 py-px text-[11px] font-semibold text-accent-text">Empfohlen</span>
+      </span>
+    ),
+    state: host.vboxPath ? (host.virtualizationEnabled ? "ok" : "warn") : "error",
+    text: host.vboxPath ? (
+      host.virtualizationEnabled ? (
+        <>Installiert (Version {host.vboxVersion?.split("r")[0] ?? "?"}). Kann alle Systeme ausführen – auch Windows 11.</>
       ) : (
-        <>
-          Damit Nestbox VMs ohne ständige Admin-Abfragen steuern kann, musst du Mitglied der Gruppe „Hyper-V-Administratoren“ sein.
-          <Info text="Eine Windows-Benutzergruppe, deren Mitglieder Hyper-V verwenden dürfen, ohne vollständige Administratorrechte zu haben. Windows fragt dich einmal um Erlaubnis." />
-        </>
-      ),
-      action:
-        !host.hypervGroupOk && !host.hypervGroupNeedsRelogin ? (
-          <Button size="sm" variant="primary" loading={busy === "group"} onClick={() => run("group", api.fixHypervGroup)}>
-            Mich hinzufügen
-          </Button>
-        ) : undefined,
-    });
-  } else {
+        "Installiert, braucht aber die Virtualisierung (siehe oben)."
+      )
+    ) : (
+      <>
+        Kostenloses Programm von Oracle, das die VMs ausführt. Kann auch Windows 11 (mit TPM und Secure Boot).
+        <Info text="VirtualBox ist kostenlos und läuft auf jeder Windows-Version – auch Home. Die Installation fragt einmal nach Administratorrechten." />
+      </>
+    ),
+    action: host.vboxPath ? undefined : install("virtualbox", VBOX_URL),
+  });
+
+  // 3. QEMU
+  checks.push({
+    id: "qemu",
+    title: (
+      <span className="inline-flex items-center gap-2">
+        QEMU <span className="text-[12px] font-normal text-muted">Alternative</span>
+      </span>
+    ),
+    state: host.qemuBroken ? "error" : host.qemuPath ? (host.qemuFirmware ? "ok" : "warn") : host.vboxReady ? "info" : "error",
+    text: host.qemuBroken ? (
+      "QEMU ist nur unvollständig installiert und startet nicht (z. B. weil die Installation abgebrochen wurde oder der Speicherplatz knapp war). Installiere es erneut."
+    ) : host.qemuPath ? (
+      host.qemuFirmware ? (
+        <span className="selectable break-all">Installiert: {host.qemuPath}</span>
+      ) : (
+        "QEMU ist da, aber die UEFI-Firmware fehlt. Installiere QEMU neu (vollständige Installation)."
+      )
+    ) : host.vboxReady ? (
+      "Optional. Kostenlos und quelloffen – nur nötig, wenn du VirtualBox nicht nutzen möchtest."
+    ) : (
+      <>
+        Kostenlos und quelloffen. Läuft notfalls auch ohne Hardware-Virtualisierung (dann langsam). Windows 11 geht damit nicht.
+        <Info text="Windows 11 verlangt einen TPM-Sicherheitschip, den QEMU unter Windows nicht nachbilden kann. Linux und ältere Windows-Versionen funktionieren." />
+      </>
+    ),
+    action: !host.qemuPath || host.qemuBroken ? (
+      <div className="flex flex-wrap items-center gap-2">
+        {install("qemu", QEMU_URL)}
+        <Button
+          size="sm"
+          variant="ghost"
+          icon={<FolderOpen className="size-3.5" />}
+          onClick={async () => {
+            const dir = await pickFolder(settings.qemuDir || undefined);
+            if (dir) await run("qemudir", () => onSettings({ ...settings, qemuDir: dir }));
+          }}
+        >
+          Ordner wählen
+        </Button>
+      </div>
+    ) : undefined,
+  });
+
+  // 4. Beschleunigung für QEMU (nur relevant, wenn QEMU genutzt wird)
+  if (host.qemuPath && host.virtualizationEnabled && host.activeBackend === "qemu") {
     checks.push({
       id: "whpx",
-      title: "Windows-Hypervisor-Plattform",
-      state: host.whpxFeature === "enabled" ? "ok" : "error",
-      text:
-        host.whpxFeature === "enabled" ? (
-          "Ist aktiv – VMs laufen mit voller Geschwindigkeit."
-        ) : (
-          <>
-            Damit VMs schnell laufen, braucht QEMU diese Windows-Funktion. Nestbox schaltet sie ein – danach ist ein Neustart nötig.
-            <Info text="Eine Schnittstelle von Windows (WHPX), über die Programme wie QEMU die Virtualisierungsfunktionen des Prozessors nutzen dürfen." />
-          </>
-        ),
-      action:
-        host.whpxFeature !== "enabled" ? (
-          <Button size="sm" variant="primary" loading={busy === "whpx"} onClick={() => run("whpx", () => api.enableFeature("HypervisorPlatform"))}>
-            Aktivieren
-          </Button>
-        ) : undefined,
-    });
-    checks.push({
-      id: "qemu",
-      title: "QEMU",
-      state: host.qemuPath ? (host.qemuFirmware ? "ok" : "warn") : "error",
-      text: host.qemuPath ? (
-        host.qemuFirmware ? (
-          <span className="selectable break-all">Gefunden: {host.qemuPath}</span>
-        ) : (
-          "QEMU ist da, aber die UEFI-Firmware fehlt. Installiere QEMU neu (vollständige Installation)."
-        )
+      title: "Schneller Modus für QEMU",
+      state: host.qemuAccelerated ? "ok" : "warn",
+      text: host.qemuAccelerated ? (
+        "Die Windows-Hypervisor-Plattform ist aktiv – QEMU läuft mit voller Geschwindigkeit."
       ) : (
         <>
-          QEMU ist ein kostenloses Programm, das die VMs ausführt. Lade es herunter, installiere es mit den Standardeinstellungen und klicke dann auf „Erneut prüfen“.
+          Schalte die Windows-Hypervisor-Plattform ein, damit QEMU-VMs flüssig laufen. Danach ist ein Neustart nötig.
+          <Info text="Eine kostenlose Windows-Funktion (WHPX), über die QEMU die Virtualisierung des Prozessors nutzt. Ohne sie rechnet QEMU alles in Software – das ist sehr langsam." />
         </>
       ),
-      action: !host.qemuPath ? (
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="primary" icon={<ExternalLink className="size-3.5" />} onClick={() => openLink(QEMU_URL)}>
-            QEMU herunterladen
+      action:
+        !host.qemuAccelerated && host.whpxFeature !== "enabled" ? (
+          <Button size="sm" variant="primary" icon={<Zap className="size-3.5" />} loading={busy === "whpx"} onClick={() => run("whpx", api.enableWhpx)}>
+            Einschalten
           </Button>
-          <Button
-            size="sm"
-            icon={<FolderOpen className="size-3.5" />}
-            onClick={async () => {
-              const dir = await pickFolder(settings.qemuDir || undefined);
-              if (dir) await run("qemudir", () => onSettings({ ...settings, qemuDir: dir }));
-            }}
-          >
-            Ordner wählen
-          </Button>
-        </div>
-      ) : undefined,
-    });
-    checks.push({
-      id: "win11",
-      title: "Hinweis zu Windows 11",
-      state: "info",
-      text: "Windows 11 braucht einen TPM-Sicherheitschip, den QEMU unter Windows nicht nachbilden kann. Linux und ältere Windows-Versionen (per eigener ISO) funktionieren.",
+        ) : undefined,
     });
   }
 
-  const switchTo = hv ? "qemu" : host.hypervFeature !== "unavailable" && !host.isHome ? "hyperv" : null;
+  const usable = host.vboxReady ? "VirtualBox" : host.qemuReady ? "QEMU" : null;
 
   return (
     <div className="flex h-full overflow-y-auto">
@@ -226,7 +205,9 @@ export function Setup({
           <NestboxLogo size={64} />
           <h1 className="mt-5 font-display text-[28px] font-semibold tracking-[-0.02em]">Willkommen bei Nestbox</h1>
           <p className="mt-1.5 max-w-md text-[15px] text-text-2">
-            {ready ? "Alles bereit. Dein PC kann virtuelle Maschinen ausführen." : "Wir prüfen kurz, ob dein PC bereit für virtuelle Maschinen ist."}
+            {ready
+              ? `Alles bereit. Deine VMs laufen mit ${usable} – kostenlos, auf jeder Windows-Version.`
+              : "Wir prüfen kurz, ob dein PC bereit für virtuelle Maschinen ist. Alles, was fehlt, ist kostenlos."}
           </p>
         </div>
 
@@ -249,6 +230,12 @@ export function Setup({
           ))}
         </div>
 
+        {busy === "virtualbox" || busy === "qemu" ? (
+          <p className="mt-3 text-center text-[13px] text-muted anim-fade">
+            Das dauert ein paar Minuten. Bestätige die Windows-Abfrage („Möchten Sie zulassen …?“) mit „Ja“, falls sie erscheint.
+          </p>
+        ) : null}
+
         {error && (
           <div className="mt-4">
             <ErrorPanel error={error} onClose={() => setError(null)} />
@@ -256,40 +243,21 @@ export function Setup({
         )}
 
         <div className="mt-6 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-[13px] text-muted">
-            <Cpu className="size-4" />
+          <div className="flex min-w-0 items-center gap-2 text-[13px] text-muted">
+            <Cpu className="size-4 shrink-0" />
             <span className="truncate">
-              {host.cpuName} · {host.logicalCores} Kerne · {Math.round(host.totalMemoryMb / 1024)} GB RAM
+              {host.windowsName} · {host.logicalCores} Kerne · {Math.round(host.totalMemoryMb / 1024)} GB RAM
             </span>
           </div>
           <div className="flex shrink-0 gap-2">
-            <Button variant="ghost" icon={<RefreshCw className={cx("size-4", checking && "anim-spin")} />} disabled={checking} onClick={() => onRecheck()}>
+            <Button variant="ghost" icon={<RefreshCw className={cx("size-4", checking && "anim-spin")} />} disabled={checking || !!busy} onClick={() => onRecheck()}>
               Erneut prüfen
             </Button>
-            <Button variant="primary" disabled={!ready} onClick={onDone}>
+            <Button variant="primary" disabled={!ready || !!busy} onClick={onDone}>
               Los geht’s <ArrowRight className="size-4" />
             </Button>
           </div>
         </div>
-
-        {switchTo && (
-          <div className="mt-8 text-center text-[13px] text-muted">
-            {switchTo === "qemu" ? "Hyper-V lieber nicht verwenden?" : "Dein Windows kann auch Hyper-V nutzen."}{" "}
-            <button
-              className="font-medium text-accent-text hover:underline"
-              onClick={() => run("switch", () => onSettings({ ...settings, backend: switchTo }))}
-            >
-              {switchTo === "qemu" ? "Stattdessen QEMU verwenden" : "Hyper-V verwenden"}
-            </button>
-            <Info
-              text={
-                switchTo === "qemu"
-                  ? "QEMU ist ein eigenständiges Programm zum Ausführen von VMs. Hyper-V ist in Windows eingebaut und meist die bessere Wahl."
-                  : "Hyper-V ist in Windows eingebaut, läuft sehr stabil und unterstützt auch Windows 11 als Gast."
-              }
-            />
-          </div>
-        )}
       </div>
 
       <Dialog
@@ -297,7 +265,11 @@ export function Setup({
         onClose={() => setConfirmRestart(false)}
         title="PC jetzt neu starten?"
         description="Speichere vorher alle offenen Dateien. Der Neustart beginnt in wenigen Sekunden."
-        icon={<span className="flex size-10 items-center justify-center rounded-full bg-warn-soft"><RotateCcw className="size-5 text-warn" /></span>}
+        icon={
+          <span className="flex size-10 items-center justify-center rounded-full bg-warn-soft">
+            <RotateCcw className="size-5 text-warn" />
+          </span>
+        }
         footer={
           <>
             <Button variant="ghost" onClick={() => setConfirmRestart(false)}>
@@ -353,7 +325,7 @@ function CheckRow({ check, first, delay }: { check: Check; first: boolean; delay
           <div className="mt-2">
             <button onClick={() => setOpen(!open)} className="inline-flex items-center gap-1 text-[13px] font-medium text-accent-text">
               <ChevronRight className={cx("size-3.5 transition-transform", open && "rotate-90")} />
-              {check.stepsLabel ?? "So schaltest du sie ein"}
+              {check.stepsLabel ?? "So geht’s"}
             </button>
             {open && (
               <ol className="mt-2 list-decimal space-y-1 pl-5 text-[13px] text-text-2 anim-fade">
