@@ -30,15 +30,19 @@
     },
     {
       "name": "Feinschliff & README",
-      "state": "active"
+      "state": "done"
     },
     {
       "name": "Test & Start",
       "state": "open"
     }
   ],
-  "now": "Mache GitHub schöner und richte den automatischen Installer-Download ein",
+  "now": "Installer ist fertig – Tests mit echten VMs folgen, sobald die Windows-VM mehr Platz und CPU-Typ „host“ hat",
   "files": [
+    {
+      "path": ".gitignore",
+      "t": "2026-09-29T16:38:49.254Z"
+    },
     {
       "path": "docs/logo.svg",
       "t": "2026-09-29T16:23:00.835Z"
@@ -94,13 +98,25 @@
     {
       "path": "src-tauri/src/backend/mod.rs",
       "t": "2026-09-29T10:59:30.418Z"
-    },
-    {
-      "path": "src/lib/mock.ts",
-      "t": "2026-09-29T10:04:44.821Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-09-29T16:38:49.254Z",
+      "text": "Nestbox-Setup.exe liegt zusätzlich im Projektordner unter Installer/"
+    },
+    {
+      "t": "2026-09-29T16:38:49.253Z",
+      "text": "Installer auf GitHub gebaut: Release „Nestbox 0.9.0 (Vorschau)“ mit Nestbox-Setup.exe und Nestbox.msi"
+    },
+    {
+      "t": "2026-09-29T16:24:21.729Z",
+      "text": "Repo-Beschreibung und Themen auf GitHub gesetzt, Tag v0.9.0 gepusht – Installer-Build läuft"
+    },
+    {
+      "t": "2026-09-29T16:24:21.728Z",
+      "text": "iCloud hatte Konfliktkopien im Git-Verzeichnis angelegt – repariert, Commit sauber neu angehängt"
+    },
     {
       "t": "2026-09-29T16:23:00.835Z",
       "text": "Version auf 0.9.0 (Vorschau) gesetzt"
@@ -815,10 +831,6 @@
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-09-29T16:23:00.866Z",
-  "icloudConflicts": [
-    ".git/index 2",
-    ".git/refs/heads/main 2",
-    ".git/refs/remotes/origin/main 2"
-  ]
+  "updated": "2026-09-29T16:38:49.277Z",
+  "icloudConflicts": []
 }
