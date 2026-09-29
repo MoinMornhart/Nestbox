@@ -1,7 +1,7 @@
 //! Hyper-V-Backend (Windows Pro/Enterprise/Education) – alles über PowerShell.
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use serde::Deserialize;
 

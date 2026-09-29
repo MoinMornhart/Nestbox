@@ -22,6 +22,9 @@ const baseHost: HostInfo = {
   whpxFeature: "enabled",
   virtualizationEnabled: true,
   hypervisorPresent: true,
+  windowsHypervisorRunning: true,
+  isVirtualMachine: false,
+  machineName: "LENOVO ThinkPad T14s",
   hypervGroupOk: true,
   hypervGroupNeedsRelogin: false,
   isAdmin: true,
@@ -57,6 +60,8 @@ if (scenario === "einrichtung") {
     totalMemoryMb: 16384,
     logicalCores: 8,
   };
+} else if (scenario === "vm") {
+  host = { ...host, virtualizationEnabled: false, windowsHypervisorRunning: false, isVirtualMachine: true, machineName: "QEMU Standard PC (Q35 + ICH9, 2009)", cpuName: "QEMU Virtual CPU version 2.5+", hypervReady: false, hypervGroupOk: false, logicalCores: 6, totalMemoryMb: 14932 };
 } else if (scenario === "neustart") {
   host = { ...host, hypervReady: false, rebootPending: true, hypervGroupOk: false, hypervGroupNeedsRelogin: true };
 }
@@ -94,7 +99,7 @@ function vm(p: Partial<Vm> & Pick<Vm, "id" | "name" | "osId" | "osFamily">, st: 
 }
 
 let vms: Vm[] =
-  scenario === "leer" || scenario === "einrichtung" || scenario === "home" || scenario === "neustart"
+  ["leer", "einrichtung", "home", "neustart", "vm"].includes(scenario)
     ? []
     : [
         vm({ id: "a1", name: "Ubuntu 24.04", osId: "ubuntu", osFamily: "linux", cpus: 4, memoryMb: 8192, isoPath: "C:\\Users\\Demo\\Downloads\\ubuntu-24.04.3-desktop-amd64.iso" }, "running", 23, 6120),

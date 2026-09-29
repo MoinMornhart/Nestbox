@@ -57,3 +57,63 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("Nestbox konnte nicht gestartet werden");
 }
+
+/// Tests gegen das echte System. Werden nur auf Wunsch ausgeführt:
+///   cargo test -- --ignored --nocapture --test-threads=1
+#[cfg(test)]
+mod systemtest {
+    use crate::backend::hyperv::HyperVBackend;
+    use crate::backend::{CreateSpec, VmBackend, VmChanges};
+    use crate::store::{OsFamily, Settings};
+
+    #[test]
+    #[ignore]
+    fn einrichtung_pruefen() {
+        let mut s = Settings::default();
+        let info = crate::host::detect(&mut s).expect("Erkennung fehlgeschlagen");
+        println!("{}", serde_json::to_string_pretty(&info).unwrap());
+    }
+
+    /// Kompletter Ablauf mit einer Test-VM ohne ISO: anlegen, starten, pausieren,
+    /// Sicherungspunkt, ausschalten, ändern, umbenennen, löschen.
+    #[test]
+    #[ignore]
+    fn hyperv_lebenszyklus() {
+        let dir = std::env::temp_dir().join("nestbox-systemtest");
+        let settings = Settings { vm_dir: dir.to_string_lossy().to_string(), ..Settings::default() };
+        let b = HyperVBackend;
+        let spec = CreateSpec {
+            name: "Nestbox-Systemtest".into(),
+            os_family: OsFamily::Linux,
+            os_id: "custom".into(),
+            iso_path: None,
+            cpus: 1,
+            memory_mb: 512,
+            disk_gb: 1,
+        };
+        let step = |s: &str, l: &str, st: &str| println!("  [{st}] {s}: {l}");
+        let mut vm = b.create(&spec, &settings, "test-id", &step).expect("anlegen");
+        println!("angelegt: {:?}", vm.hyperv_id);
+        let res = (|| -> Result<(), crate::error::AppError> {
+            b.start(&vm)?;
+            println!("status: {:?}", b.status(std::slice::from_ref(&vm))?);
+            b.pause(&vm)?;
+            println!("pausiert: {:?}", b.status(std::slice::from_ref(&vm))?[0].state);
+            b.resume(&vm)?;
+            let snap = b.create_snapshot(&vm, "Testpunkt")?;
+            println!("sicherungspunkte: {:?}", b.list_snapshots(&vm)?);
+            b.power_off(&vm)?;
+            b.restore_snapshot(&vm, &snap.id)?;
+            b.power_off(&vm)?;
+            b.delete_snapshot(&vm, &snap.id)?;
+            b.update(&vm, &VmChanges { cpus: 2, memory_mb: 1024, disk_gb: 2 })?;
+            b.rename(&vm, "Nestbox-Systemtest-2")?;
+            vm.name = "Nestbox-Systemtest-2".into();
+            println!("status: {:?}", b.status(std::slice::from_ref(&vm))?);
+            Ok(())
+        })();
+        b.delete(&vm, true).expect("löschen");
+        println!("gelöscht, Ordner vorhanden: {}", std::path::Path::new(&vm.dir).exists());
+        res.expect("Ablauf");
+    }
+}

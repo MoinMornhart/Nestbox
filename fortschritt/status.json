@@ -18,11 +18,11 @@
     },
     {
       "name": "Hauptansicht",
-      "state": "active"
+      "state": "done"
     },
     {
       "name": "Snapshots",
-      "state": "open"
+      "state": "done"
     },
     {
       "name": "QEMU-Backend",
@@ -30,15 +30,63 @@
     },
     {
       "name": "Feinschliff & README",
-      "state": "open"
+      "state": "active"
     },
     {
       "name": "Test & Start",
-      "state": "open"
+      "state": "active"
     }
   ],
-  "now": "Nehme Vorschaubilder aller Bildschirme und Overlays auf",
+  "now": "Echte App läuft – teste und fasse zusammen, was auf diesem PC geht",
   "files": [
+    {
+      "path": "src/lib/mock.ts",
+      "t": "2026-09-29T10:04:44.821Z"
+    },
+    {
+      "path": "src/lib/types.ts",
+      "t": "2026-09-29T10:04:44.821Z"
+    },
+    {
+      "path": "src/screens/Setup.tsx",
+      "t": "2026-09-29T10:04:44.821Z"
+    },
+    {
+      "path": "src-tauri/src/error.rs",
+      "t": "2026-09-29T10:04:44.821Z"
+    },
+    {
+      "path": "src-tauri/src/host.rs",
+      "t": "2026-09-29T10:04:44.821Z"
+    },
+    {
+      "path": "src-tauri/Cargo.toml",
+      "t": "2026-09-29T09:49:22.939Z"
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "t": "2026-09-29T09:49:22.939Z"
+    },
+    {
+      "path": "src-tauri/src/commands.rs",
+      "t": "2026-09-29T09:49:22.939Z"
+    },
+    {
+      "path": "README.md",
+      "t": "2026-09-29T09:32:02.144Z"
+    },
+    {
+      "path": "scripts/tauri.mjs",
+      "t": "2026-09-29T09:32:02.144Z"
+    },
+    {
+      "path": ".gitattributes",
+      "t": "2026-09-29T06:09:43.539Z"
+    },
+    {
+      "path": "start.bat",
+      "t": "2026-09-29T06:09:43.539Z"
+    },
     {
       "path": "scripts/screenshots.mjs",
       "t": "2026-09-29T06:04:59.854Z"
@@ -50,57 +98,81 @@
     {
       "path": "src/screens/dialogs.tsx",
       "t": "2026-09-29T06:04:59.854Z"
-    },
-    {
-      "path": "src/screens/VmCard.tsx",
-      "t": "2026-09-29T06:04:59.854Z"
-    },
-    {
-      "path": "src/screens/Dashboard.tsx",
-      "t": "2026-09-29T06:04:59.854Z"
-    },
-    {
-      "path": "src/lib/presets.ts",
-      "t": "2026-09-29T05:59:59.584Z"
-    },
-    {
-      "path": "src/lib/os.tsx",
-      "t": "2026-09-29T05:59:59.584Z"
-    },
-    {
-      "path": "src/lib/mock.ts",
-      "t": "2026-09-29T05:59:59.584Z"
-    },
-    {
-      "path": "src/components/ui.tsx",
-      "t": "2026-09-29T05:59:59.584Z"
-    },
-    {
-      "path": "src/screens/Setup.tsx",
-      "t": "2026-09-29T05:59:59.584Z"
-    },
-    {
-      "path": "src/screens/wizard/Wizard.tsx",
-      "t": "2026-09-29T05:59:59.584Z"
-    },
-    {
-      "path": "src-tauri/src/ps.rs",
-      "t": "2026-09-29T05:52:32.928Z"
-    },
-    {
-      "path": "src-tauri/src/elevate.rs",
-      "t": "2026-09-29T05:52:32.928Z"
-    },
-    {
-      "path": "src-tauri/src/host.rs",
-      "t": "2026-09-29T05:52:32.928Z"
-    },
-    {
-      "path": "src-tauri/src/backend/qmp.rs",
-      "t": "2026-09-29T05:52:32.928Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-09-29T10:04:44.821Z",
+      "text": "Echte Desktop-App (npm run tauri dev) gestartet – Einrichtung zeigt die echten Werte dieses PCs"
+    },
+    {
+      "t": "2026-09-29T10:04:44.821Z",
+      "text": "Erkennung korrigiert: Nestbox erkennt jetzt „Windows läuft selbst in einer VM“ und zeigt Lösungsschritte (Proxmox: CPU-Typ host)"
+    },
+    {
+      "t": "2026-09-29T10:04:44.821Z",
+      "text": "Start der Test-VM scheitert, weil dieses Windows selbst in einer QEMU/Proxmox-VM läuft und keine Virtualisierung durchgereicht bekommt"
+    },
+    {
+      "t": "2026-09-29T10:04:44.820Z",
+      "text": "Hyper-V am echten System getestet: VM anlegen (VHDX, Gen 2, Secure Boot) und Löschen funktionieren"
+    },
+    {
+      "t": "2026-09-29T09:49:22.939Z",
+      "text": "Einrichtungsprüfung am echten System getestet: erkennt Windows 11 Pro, Hyper-V aktiv, fehlende Gruppenmitgliedschaft"
+    },
+    {
+      "t": "2026-09-29T09:49:22.938Z",
+      "text": "Rust-Backend kompiliert fehlerfrei (1 Fehler behoben)"
+    },
+    {
+      "t": "2026-09-29T09:32:02.143Z",
+      "text": "Auf deinen Wunsch: Build-Ordner liegt jetzt im Projekt (src-tauri/target) statt unter %LOCALAPPDATA%"
+    },
+    {
+      "t": "2026-09-29T09:30:50.974Z",
+      "text": "Rust-Build gestartet"
+    },
+    {
+      "t": "2026-09-29T09:30:50.974Z",
+      "text": "Platz geschaffen: npm-Cache geleert (4 GB frei), Windows-Update-Cache wird geleert"
+    },
+    {
+      "t": "2026-09-29T09:13:18.191Z",
+      "text": "Debug-Symbole im Entwicklungs-Build abgeschaltet (spart mehrere GB)"
+    },
+    {
+      "t": "2026-09-29T09:13:18.191Z",
+      "text": "Erster Build scheiterte an fehlendem Speicherplatz auf C:"
+    },
+    {
+      "t": "2026-09-29T09:13:18.191Z",
+      "text": "Build Tools fertig installiert"
+    },
+    {
+      "t": "2026-09-29T09:07:59.644Z",
+      "text": "Build Tools installiert, erster Rust-Build gestartet"
+    },
+    {
+      "t": "2026-09-29T09:05:46.903Z",
+      "text": "UAC bestätigt – Installation der Build Tools läuft"
+    },
+    {
+      "t": "2026-09-29T06:09:43.539Z",
+      "text": "QEMU-Backend (WHPX, q35, OVMF, qcow2, QMP) geschrieben – Test folgt nach dem Kompilieren"
+    },
+    {
+      "t": "2026-09-29T06:09:43.539Z",
+      "text": "Sicherungspunkte: Erstellen, Wiederherstellen, Löschen mit Bestätigung – im Mock getestet"
+    },
+    {
+      "t": "2026-09-29T06:09:43.539Z",
+      "text": "README (Voraussetzungen, Befehle, Architektur) und start.bat (prüft Node, Rust, Build Tools, WebView2) geschrieben"
+    },
+    {
+      "t": "2026-09-29T06:09:43.538Z",
+      "text": "Privates GitHub-Repo angelegt: github.com/MoinMornhart/Nestbox"
+    },
     {
       "t": "2026-09-29T06:04:59.854Z",
       "text": "Screenshot-Skript mit Playwright (hell + dunkel) angelegt"
@@ -158,14 +230,36 @@
       "text": "Projektordner geprüft: leer. Node.js 24 vorhanden, Rust und Visual Studio Build Tools fehlen noch"
     }
   ],
-  "waiting": [
+  "waiting": [],
+  "problems": [
     {
-      "t": "2026-09-29T06:00:10.011Z",
-      "text": "Bitte die Windows-Abfrage (UAC) für die Installation der Visual Studio Build Tools mit „Ja“ bestätigen – sonst kann die App nicht kompiliert werden."
+      "t": "2026-09-29T06:09:43.539Z",
+      "text": "Visual Studio Build Tools noch nicht installiert – die Installation wartet auf die UAC-Bestätigung",
+      "fix": "Sobald du „Ja“ klickst, läuft die Installation weiter; danach kompiliere und teste ich das Rust-Backend",
+      "solved": "2026-09-29T09:05:46.902Z"
+    },
+    {
+      "t": "2026-09-29T09:13:18.189Z",
+      "text": "Laufwerk C: hat 0 GB frei – der Rust-Build (Tauri) braucht etwa 3–4 GB",
+      "fix": "Speicher freigeben (z. B. iCloud-Ordner „MoinMornhart“ 13,5 GB auf „Nur online“ stellen, Datenträgerbereinigung) oder die Festplatte dieser VM vergrößern",
+      "solved": "2026-09-29T09:30:50.973Z"
+    },
+    {
+      "t": "2026-09-29T10:04:44.821Z",
+      "text": "Auf diesem PC können keine VMs starten: Proxmox reicht die Virtualisierung nicht an dieses Windows durch",
+      "fix": "In Proxmox bei dieser VM Hardware → Prozessoren → Typ „host“ einstellen, VM herunterfahren und neu einschalten"
     }
   ],
-  "problems": [],
   "images": [
+    {
+      "file": "echte-app-einrichtung-hell.png",
+      "base": "echte-app-einrichtung",
+      "title": "Echte App (Tauri) – Einrichtung auf diesem PC",
+      "group": "Echte App",
+      "order": 0,
+      "theme": "hell",
+      "t": "2026-09-29T10:04:26.096Z"
+    },
     {
       "file": "einrichtung-dunkel.png",
       "base": "einrichtung",
@@ -173,7 +267,7 @@
       "group": "Bildschirme",
       "order": 1,
       "theme": "dunkel",
-      "t": "2026-09-29T06:05:07.213Z"
+      "t": "2026-09-29T09:57:11.662Z"
     },
     {
       "file": "einrichtung-hell.png",
@@ -182,7 +276,7 @@
       "group": "Bildschirme",
       "order": 1,
       "theme": "hell",
-      "t": "2026-09-29T06:05:04.505Z"
+      "t": "2026-09-29T09:57:09.080Z"
     },
     {
       "file": "einrichtung-bereit-dunkel.png",
@@ -191,7 +285,7 @@
       "group": "Bildschirme",
       "order": 2,
       "theme": "dunkel",
-      "t": "2026-09-29T06:05:12.620Z"
+      "t": "2026-09-29T09:57:16.728Z"
     },
     {
       "file": "einrichtung-bereit-hell.png",
@@ -200,7 +294,7 @@
       "group": "Bildschirme",
       "order": 2,
       "theme": "hell",
-      "t": "2026-09-29T06:05:09.930Z"
+      "t": "2026-09-29T09:57:14.186Z"
     },
     {
       "file": "einrichtung-home-dunkel.png",
@@ -209,7 +303,7 @@
       "group": "Bildschirme",
       "order": 3,
       "theme": "dunkel",
-      "t": "2026-09-29T06:05:18.116Z"
+      "t": "2026-09-29T09:57:22.067Z"
     },
     {
       "file": "einrichtung-home-hell.png",
@@ -218,7 +312,7 @@
       "group": "Bildschirme",
       "order": 3,
       "theme": "hell",
-      "t": "2026-09-29T06:05:15.374Z"
+      "t": "2026-09-29T09:57:19.351Z"
     },
     {
       "file": "einrichtung-neustart-dunkel.png",
@@ -227,7 +321,7 @@
       "group": "Bildschirme",
       "order": 4,
       "theme": "dunkel",
-      "t": "2026-09-29T06:05:25.303Z"
+      "t": "2026-09-29T09:57:27.531Z"
     },
     {
       "file": "einrichtung-neustart-hell.png",
@@ -236,14 +330,32 @@
       "group": "Bildschirme",
       "order": 4,
       "theme": "hell",
-      "t": "2026-09-29T06:05:22.579Z"
+      "t": "2026-09-29T09:57:24.787Z"
+    },
+    {
+      "file": "einrichtung-vm-dunkel.png",
+      "base": "einrichtung-vm",
+      "title": "Einrichtung – Windows läuft selbst in einer VM",
+      "group": "Bildschirme",
+      "order": 5,
+      "theme": "dunkel",
+      "t": "2026-09-29T09:57:33.886Z"
+    },
+    {
+      "file": "einrichtung-vm-hell.png",
+      "base": "einrichtung-vm",
+      "title": "Einrichtung – Windows läuft selbst in einer VM",
+      "group": "Bildschirme",
+      "order": 5,
+      "theme": "hell",
+      "t": "2026-09-29T09:57:30.694Z"
     },
     {
       "file": "assistent-1-dunkel.png",
       "base": "assistent-1",
       "title": "Assistent 1 – Betriebssystem wählen",
       "group": "Bildschirme",
-      "order": 5,
+      "order": 6,
       "theme": "dunkel",
       "t": "2026-09-29T06:05:30.814Z"
     },
@@ -252,7 +364,7 @@
       "base": "assistent-1",
       "title": "Assistent 1 – Betriebssystem wählen",
       "group": "Bildschirme",
-      "order": 5,
+      "order": 6,
       "theme": "hell",
       "t": "2026-09-29T06:05:28.010Z"
     },
@@ -261,7 +373,7 @@
       "base": "assistent-1-iso",
       "title": "Assistent 1 – ISO übernommen",
       "group": "Bildschirme",
-      "order": 6,
+      "order": 7,
       "theme": "dunkel",
       "t": "2026-09-29T06:05:35.946Z"
     },
@@ -270,7 +382,7 @@
       "base": "assistent-1-iso",
       "title": "Assistent 1 – ISO übernommen",
       "group": "Bildschirme",
-      "order": 6,
+      "order": 7,
       "theme": "hell",
       "t": "2026-09-29T06:05:33.397Z"
     },
@@ -279,7 +391,7 @@
       "base": "assistent-2",
       "title": "Assistent 2 – Name",
       "group": "Bildschirme",
-      "order": 7,
+      "order": 8,
       "theme": "dunkel",
       "t": "2026-09-29T06:05:41.096Z"
     },
@@ -288,7 +400,7 @@
       "base": "assistent-2",
       "title": "Assistent 2 – Name",
       "group": "Bildschirme",
-      "order": 7,
+      "order": 8,
       "theme": "hell",
       "t": "2026-09-29T06:05:38.491Z"
     },
@@ -297,7 +409,7 @@
       "base": "assistent-3",
       "title": "Assistent 3 – Leistung (Erweitert)",
       "group": "Bildschirme",
-      "order": 8,
+      "order": 9,
       "theme": "dunkel",
       "t": "2026-09-29T06:05:46.249Z"
     },
@@ -306,7 +418,7 @@
       "base": "assistent-3",
       "title": "Assistent 3 – Leistung (Erweitert)",
       "group": "Bildschirme",
-      "order": 8,
+      "order": 9,
       "theme": "hell",
       "t": "2026-09-29T06:05:43.696Z"
     },
@@ -315,7 +427,7 @@
       "base": "assistent-4",
       "title": "Assistent 4 – Zusammenfassung",
       "group": "Bildschirme",
-      "order": 9,
+      "order": 10,
       "theme": "dunkel",
       "t": "2026-09-29T06:05:51.380Z"
     },
@@ -324,7 +436,7 @@
       "base": "assistent-4",
       "title": "Assistent 4 – Zusammenfassung",
       "group": "Bildschirme",
-      "order": 9,
+      "order": 10,
       "theme": "hell",
       "t": "2026-09-29T06:05:48.830Z"
     },
@@ -333,7 +445,7 @@
       "base": "hauptansicht",
       "title": "Hauptansicht",
       "group": "Bildschirme",
-      "order": 10,
+      "order": 11,
       "theme": "dunkel",
       "t": "2026-09-29T06:05:56.731Z"
     },
@@ -342,7 +454,7 @@
       "base": "hauptansicht",
       "title": "Hauptansicht",
       "group": "Bildschirme",
-      "order": 10,
+      "order": 11,
       "theme": "hell",
       "t": "2026-09-29T06:05:53.987Z"
     },
@@ -351,7 +463,7 @@
       "base": "hauptansicht-leer",
       "title": "Hauptansicht – noch keine VMs",
       "group": "Bildschirme",
-      "order": 11,
+      "order": 12,
       "theme": "dunkel",
       "t": "2026-09-29T06:06:01.837Z"
     },
@@ -360,7 +472,7 @@
       "base": "hauptansicht-leer",
       "title": "Hauptansicht – noch keine VMs",
       "group": "Bildschirme",
-      "order": 11,
+      "order": 12,
       "theme": "hell",
       "t": "2026-09-29T06:05:59.287Z"
     },
@@ -369,7 +481,7 @@
       "base": "einstellungen",
       "title": "Einstellungen",
       "group": "Bildschirme",
-      "order": 12,
+      "order": 13,
       "theme": "dunkel",
       "t": "2026-09-29T06:06:07.100Z"
     },
@@ -378,7 +490,7 @@
       "base": "einstellungen",
       "title": "Einstellungen",
       "group": "Bildschirme",
-      "order": 12,
+      "order": 13,
       "theme": "hell",
       "t": "2026-09-29T06:06:04.484Z"
     },
@@ -387,7 +499,7 @@
       "base": "erstellen-fortschritt",
       "title": "Erstellen – Fortschrittsanzeige",
       "group": "Overlays",
-      "order": 13,
+      "order": 14,
       "theme": "dunkel",
       "t": "2026-09-29T06:06:13.123Z"
     },
@@ -396,7 +508,7 @@
       "base": "erstellen-fortschritt",
       "title": "Erstellen – Fortschrittsanzeige",
       "group": "Overlays",
-      "order": 13,
+      "order": 14,
       "theme": "hell",
       "t": "2026-09-29T06:06:10.140Z"
     },
@@ -405,7 +517,7 @@
       "base": "erstellen-fertig",
       "title": "Erstellen – fertig",
       "group": "Overlays",
-      "order": 14,
+      "order": 15,
       "theme": "dunkel",
       "t": "2026-09-29T06:06:28.314Z"
     },
@@ -414,7 +526,7 @@
       "base": "erstellen-fertig",
       "title": "Erstellen – fertig",
       "group": "Overlays",
-      "order": 14,
+      "order": 15,
       "theme": "hell",
       "t": "2026-09-29T06:06:20.733Z"
     },
@@ -423,7 +535,7 @@
       "base": "erstellen-fehler",
       "title": "Erstellen – Fehlermeldung",
       "group": "Overlays",
-      "order": 15,
+      "order": 16,
       "theme": "dunkel",
       "t": "2026-09-29T06:06:40.444Z"
     },
@@ -432,7 +544,7 @@
       "base": "erstellen-fehler",
       "title": "Erstellen – Fehlermeldung",
       "group": "Overlays",
-      "order": 15,
+      "order": 16,
       "theme": "hell",
       "t": "2026-09-29T06:06:34.341Z"
     },
@@ -441,7 +553,7 @@
       "base": "kontextmenue",
       "title": "Kontextmenü einer VM",
       "group": "Overlays",
-      "order": 16,
+      "order": 17,
       "theme": "dunkel",
       "t": "2026-09-29T06:06:46.416Z"
     },
@@ -450,7 +562,7 @@
       "base": "kontextmenue",
       "title": "Kontextmenü einer VM",
       "group": "Overlays",
-      "order": 16,
+      "order": 17,
       "theme": "hell",
       "t": "2026-09-29T06:06:43.446Z"
     },
@@ -459,7 +571,7 @@
       "base": "dialog-sicherungspunkte",
       "title": "Sicherungspunkte",
       "group": "Overlays",
-      "order": 17,
+      "order": 18,
       "theme": "dunkel",
       "t": "2026-09-29T06:06:52.902Z"
     },
@@ -468,7 +580,7 @@
       "base": "dialog-sicherungspunkte",
       "title": "Sicherungspunkte",
       "group": "Overlays",
-      "order": 17,
+      "order": 18,
       "theme": "hell",
       "t": "2026-09-29T06:06:49.662Z"
     },
@@ -477,7 +589,7 @@
       "base": "dialog-wiederherstellen",
       "title": "Bestätigung – Wiederherstellen",
       "group": "Overlays",
-      "order": 18,
+      "order": 19,
       "theme": "dunkel",
       "t": "2026-09-29T06:06:59.014Z"
     },
@@ -486,7 +598,7 @@
       "base": "dialog-wiederherstellen",
       "title": "Bestätigung – Wiederherstellen",
       "group": "Overlays",
-      "order": 18,
+      "order": 19,
       "theme": "hell",
       "t": "2026-09-29T06:06:55.912Z"
     },
@@ -495,7 +607,7 @@
       "base": "dialog-loeschen",
       "title": "Bestätigung – Löschen",
       "group": "Overlays",
-      "order": 19,
+      "order": 20,
       "theme": "dunkel",
       "t": "2026-09-29T06:07:04.979Z"
     },
@@ -504,7 +616,7 @@
       "base": "dialog-loeschen",
       "title": "Bestätigung – Löschen",
       "group": "Overlays",
-      "order": 19,
+      "order": 20,
       "theme": "hell",
       "t": "2026-09-29T06:07:02.009Z"
     },
@@ -513,7 +625,7 @@
       "base": "dialog-ausschalten",
       "title": "Bestätigung – Sofort ausschalten",
       "group": "Overlays",
-      "order": 20,
+      "order": 21,
       "theme": "dunkel",
       "t": "2026-09-29T06:07:10.152Z"
     },
@@ -522,7 +634,7 @@
       "base": "dialog-ausschalten",
       "title": "Bestätigung – Sofort ausschalten",
       "group": "Overlays",
-      "order": 20,
+      "order": 21,
       "theme": "hell",
       "t": "2026-09-29T06:07:07.553Z"
     },
@@ -531,7 +643,7 @@
       "base": "dialog-umbenennen",
       "title": "Umbenennen",
       "group": "Overlays",
-      "order": 21,
+      "order": 22,
       "theme": "dunkel",
       "t": "2026-09-29T06:07:15.473Z"
     },
@@ -540,7 +652,7 @@
       "base": "dialog-umbenennen",
       "title": "Umbenennen",
       "group": "Overlays",
-      "order": 21,
+      "order": 22,
       "theme": "hell",
       "t": "2026-09-29T06:07:12.803Z"
     },
@@ -549,7 +661,7 @@
       "base": "dialog-vm-einstellungen",
       "title": "VM-Einstellungen",
       "group": "Overlays",
-      "order": 22,
+      "order": 23,
       "theme": "dunkel",
       "t": "2026-09-29T06:07:20.653Z"
     },
@@ -558,7 +670,7 @@
       "base": "dialog-vm-einstellungen",
       "title": "VM-Einstellungen",
       "group": "Overlays",
-      "order": 22,
+      "order": 23,
       "theme": "hell",
       "t": "2026-09-29T06:07:18.068Z"
     },
@@ -567,7 +679,7 @@
       "base": "fehler-toast",
       "title": "Fehlermeldung mit Lösungsvorschlag",
       "group": "Overlays",
-      "order": 23,
+      "order": 24,
       "theme": "dunkel",
       "t": "2026-09-29T06:07:27.978Z"
     },
@@ -576,7 +688,7 @@
       "base": "fehler-toast",
       "title": "Fehlermeldung mit Lösungsvorschlag",
       "group": "Overlays",
-      "order": 23,
+      "order": 24,
       "theme": "hell",
       "t": "2026-09-29T06:07:24.319Z"
     },
@@ -585,7 +697,7 @@
       "base": "tooltip",
       "title": "Tooltip für Fachbegriffe",
       "group": "Overlays",
-      "order": 24,
+      "order": 25,
       "theme": "dunkel",
       "t": "2026-09-29T06:07:34.628Z"
     },
@@ -594,10 +706,10 @@
       "base": "tooltip",
       "title": "Tooltip für Fachbegriffe",
       "group": "Overlays",
-      "order": 24,
+      "order": 25,
       "theme": "hell",
       "t": "2026-09-29T06:07:31.292Z"
     }
   ],
-  "updated": "2026-09-29T06:07:34.939Z"
+  "updated": "2026-09-29T10:04:44.838Z"
 }

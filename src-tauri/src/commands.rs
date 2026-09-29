@@ -136,18 +136,18 @@ pub fn get_settings(state: Shared<'_>) -> Settings {
 
 #[tauri::command]
 pub fn save_settings(state: Shared<'_>, new_settings: Settings) -> AppResult<Settings> {
-    let dir = new_settings.vm_dir.trim();
+    let dir = new_settings.vm_dir.trim().to_string();
     if dir.is_empty() {
         return Err(AppError::new("Bitte wähle einen Ordner für die VMs", "Klicke auf „Ändern“ und wähle einen Ordner aus."));
     }
-    std::fs::create_dir_all(dir).map_err(|e| {
+    std::fs::create_dir_all(&dir).map_err(|e| {
         AppError::new("Der VM-Ordner kann nicht angelegt werden", "Wähle einen Ordner, in dem du schreiben darfst.")
             .with_details(e.to_string())
     })?;
     let mut store = state.store.lock().unwrap_or_else(|e| e.into_inner());
     let pending = store.settings.reboot_pending_since;
     store.settings = new_settings;
-    store.settings.vm_dir = dir.to_string();
+    store.settings.vm_dir = dir;
     store.settings.reboot_pending_since = pending;
     store.save_settings()?;
     logger::info("Einstellungen gespeichert");

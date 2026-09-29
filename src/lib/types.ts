@@ -20,6 +20,9 @@ export interface HostInfo {
   whpxFeature: "enabled" | "disabled" | "unavailable";
   virtualizationEnabled: boolean;
   hypervisorPresent: boolean;
+  windowsHypervisorRunning: boolean;
+  isVirtualMachine: boolean;
+  machineName: string;
   hypervGroupOk: boolean;
   hypervGroupNeedsRelogin: boolean;
   isAdmin: boolean;

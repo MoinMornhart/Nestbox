@@ -21,7 +21,10 @@ struct RawHost {
     vmms_running: bool,
     whpx_feature: String,
     virtualization_firmware: bool,
+    vmx: bool,
     hypervisor_present: bool,
+    windows_hypervisor: bool,
+    machine: String,
     in_group_token: bool,
     in_group_member: bool,
     is_admin: bool,
@@ -46,6 +49,11 @@ pub struct HostInfo {
     pub whpx_feature: String,
     pub virtualization_enabled: bool,
     pub hypervisor_present: bool,
+    /// Läuft der Hypervisor von Windows selbst (Voraussetzung für Hyper-V und WHPX)?
+    pub windows_hypervisor_running: bool,
+    /// Läuft dieses Windows selbst in einer VM? Dann braucht es verschachtelte Virtualisierung.
+    pub is_virtual_machine: bool,
+    pub machine_name: String,
     /// Mitglied in „Hyper-V-Administratoren“ und in der aktuellen Anmeldung wirksam
     pub hyperv_group_ok: bool,
     /// Mitglied, aber erst nach Ab-/Anmelden wirksam
@@ -90,6 +98,8 @@ try {
 $isAdmin = (New-Object Security.Principal.WindowsPrincipal $me).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 $vmms = Get-Service -Name vmms -ErrorAction SilentlyContinue
 $free = 0
+$winHv = $false
+try { $winHv = @(Get-CimInstance Win32_PerfRawData_HvStats_HyperVHypervisor -ErrorAction Stop).Count -gt 0 } catch {}
 try { $free = [System.IO.DriveInfo]::new(__DRIVE__).AvailableFreeSpace } catch {}
 [pscustomobject]@{
   caption = [string]$os.Caption
@@ -100,7 +110,10 @@ try { $free = [System.IO.DriveInfo]::new(__DRIVE__).AvailableFreeSpace } catch {
   vmmsRunning = ($null -ne $vmms -and $vmms.Status -eq 'Running')
   whpxFeature = Get-FeatureState 'HypervisorPlatform'
   virtualizationFirmware = [bool]($cpu | Where-Object { $_.VirtualizationFirmwareEnabled } | Select-Object -First 1)
+  vmx = [bool]($cpu | Where-Object { $_.VMMonitorModeExtensions } | Select-Object -First 1)
   hypervisorPresent = [bool]$cs.HypervisorPresent
+  windowsHypervisor = $winHv
+  machine = ([string]$cs.Manufacturer + ' ' + [string]$cs.Model).Trim()
   inGroupToken = $inToken
   inGroupMember = $isMember
   isAdmin = $isAdmin
@@ -155,9 +168,15 @@ fn build_info(raw: RawHost, settings: &mut Settings) -> HostInfo {
     let reboot_pending = settings.reboot_pending_since.is_some();
 
     let is_home = raw.edition_id.to_lowercase().starts_with("core");
-    // Läuft bereits ein Hypervisor, meldet die CPU die Firmware-Virtualisierung oft als „aus“ –
-    // tatsächlich ist sie dann aber aktiv.
-    let virtualization_enabled = raw.virtualization_firmware || raw.hypervisor_present;
+    // Läuft der Windows-Hypervisor, blendet er die Virtualisierungsbefehle der CPU aus –
+    // dann ist die Virtualisierung trotzdem aktiv. Achtung: "HypervisorPresent" ist auch
+    // wahr, wenn Windows selbst als Gast in einer VM läuft, und taugt daher nicht als Beweis.
+    let virtualization_enabled = raw.windows_hypervisor || (raw.vmx && raw.virtualization_firmware);
+    let m = raw.machine.to_lowercase();
+    let is_virtual_machine = ["qemu", "kvm", "vmware", "virtualbox", "innotek", "virtual machine", "proxmox", "xen", "parallels"]
+        .iter()
+        .any(|k| m.contains(k))
+        || raw.cpu_name.to_lowercase().contains("qemu");
     let hyperv_group_ok = raw.in_group_token || elevate::is_elevated();
     let hyperv_group_needs_relogin = raw.in_group_member && !raw.in_group_token;
 
@@ -172,8 +191,9 @@ fn build_info(raw: RawHost, settings: &mut Settings) -> HostInfo {
         && raw.vmms_running
         && hyperv_group_ok
         && virtualization_enabled
+        && raw.windows_hypervisor
         && !reboot_pending;
-    let qemu_ready = qemu.is_some() && qemu_firmware && raw.whpx_feature == "enabled" && !reboot_pending;
+    let qemu_ready = qemu.is_some() && qemu_firmware && raw.whpx_feature == "enabled" && virtualization_enabled && !reboot_pending;
 
     let active_backend = match settings.backend {
         BackendChoice::Hyperv => BackendKind::Hyperv,
@@ -198,6 +218,9 @@ fn build_info(raw: RawHost, settings: &mut Settings) -> HostInfo {
         whpx_feature: raw.whpx_feature,
         virtualization_enabled,
         hypervisor_present: raw.hypervisor_present,
+        windows_hypervisor_running: raw.windows_hypervisor,
+        is_virtual_machine,
+        machine_name: raw.machine,
         hyperv_group_ok,
         hyperv_group_needs_relogin,
         is_admin: raw.is_admin,

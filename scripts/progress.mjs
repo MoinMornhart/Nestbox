@@ -53,9 +53,11 @@ for (let i = 0; i < args.length; i++) {
   switch (a) {
     case "--phase": {
       i++;
-      const [n, st] = v.split("=");
+      const [n, raw] = v.split("=");
+      const keep = raw.endsWith("+");
+      const st = raw.replace("+", "");
       const idx = Number(n) - 1;
-      if (st === "active") s.phases.forEach((p, j) => { if (p.state === "active" && j !== idx) p.state = "done"; });
+      if (st === "active" && !keep) s.phases.forEach((p, j) => { if (p.state === "active" && j !== idx) p.state = "done"; });
       s.phases[idx].state = st;
       break;
     }

@@ -44,8 +44,12 @@ impl AppError {
             || lower.contains("insufficient system resources")
         {
             "Es ist gerade nicht genug freier Arbeitsspeicher da. Schließe andere Programme oder VMs, oder gib der VM in den Einstellungen weniger Arbeitsspeicher."
-        } else if lower.contains("hypervisor is not running") || lower.contains("hypervisor nicht ausgeführt") {
-            "Der Windows-Hypervisor läuft nicht. Prüfe, ob die Virtualisierung im BIOS/UEFI aktiv ist, und starte den PC neu."
+        } else if lower.contains("hypervisor is not running")
+            || lower.contains("hypervisor nicht ausgeführt")
+            || lower.contains("hyper-v-komponenten nicht ausgeführt")
+            || lower.contains("hyper-v components is not running")
+        {
+            "Der Windows-Hypervisor läuft nicht. Prüfe unter „Einrichtung“, ob die Virtualisierung aktiv ist (im BIOS/UEFI bzw. – falls dieses Windows selbst eine VM ist – im Host), und starte den PC neu."
         } else if lower.contains("already exists") || lower.contains("bereits vorhanden") || lower.contains("ist bereits") {
             "Es gibt bereits etwas mit diesem Namen. Wähle einen anderen Namen."
         } else if lower.contains("wird von einem anderen prozess verwendet") || lower.contains("being used by another process") {

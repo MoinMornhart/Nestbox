@@ -15,6 +15,7 @@ interface Check {
   text: ReactNode;
   action?: ReactNode;
   steps?: string[];
+  stepsLabel?: string;
 }
 
 const QEMU_URL = "https://www.qemu.org/download/#windows";
@@ -72,22 +73,46 @@ export function Setup({
         ? "Windows Home hat kein Hyper-V – Nestbox nutzt dafür QEMU."
         : "Nestbox nutzt QEMU als Virtualisierung.",
   });
-  checks.push({
-    id: "bios",
-    title: "Virtualisierung im BIOS",
-    state: host.virtualizationEnabled ? "ok" : "error",
-    text: host.virtualizationEnabled
-      ? "Dein Prozessor darf virtuelle Maschinen ausführen."
-      : "Die Virtualisierung ist im BIOS/UEFI ausgeschaltet. Ohne sie laufen keine VMs.",
-    steps: host.virtualizationEnabled ? undefined : biosSteps,
-  });
+  const nestedSteps = [
+    "Proxmox: VM auswählen → Hardware → Prozessoren → Typ auf „host“ stellen.",
+    "Hyper-V als Host: in einer Admin-PowerShell „Set-VMProcessor -VMName <Name> -ExposeVirtualizationExtensions $true“ ausführen.",
+    "VMware: in den VM-Einstellungen beim Prozessor „Intel VT-x/EPT oder AMD-V/RVI virtualisieren“ anhaken.",
+    "Danach diese VM komplett herunterfahren (nicht nur neu starten) und wieder einschalten.",
+  ];
+  checks.push(
+    host.isVirtualMachine
+      ? {
+          id: "bios",
+          title: "Verschachtelte Virtualisierung",
+          state: host.virtualizationEnabled ? "ok" : "error",
+          text: host.virtualizationEnabled ? (
+            "Dein Windows läuft selbst in einer VM – der Host reicht die Virtualisierung durch."
+          ) : (
+            <>
+              Dein Windows läuft selbst in einer virtuellen Maschine ({host.machineName}). Damit darin wieder VMs laufen können, muss der Host die Virtualisierung an diese VM durchreichen.
+              <Info text="Das nennt man „verschachtelte Virtualisierung“ (nested virtualization): Eine VM, in der wieder VMs laufen. Der Prozessor muss dafür seine Virtualisierungsbefehle an die innere VM weitergeben." />
+            </>
+          ),
+          steps: host.virtualizationEnabled ? undefined : nestedSteps,
+          stepsLabel: "So schaltest du sie ein",
+        }
+      : {
+          id: "bios",
+          title: "Virtualisierung im BIOS",
+          state: host.virtualizationEnabled ? "ok" : "error",
+          text: host.virtualizationEnabled
+            ? "Dein Prozessor darf virtuelle Maschinen ausführen."
+            : "Die Virtualisierung ist im BIOS/UEFI ausgeschaltet. Ohne sie laufen keine VMs.",
+          steps: host.virtualizationEnabled ? undefined : biosSteps,
+        },
+  );
 
   if (hv) {
     const featureOk = host.hypervFeature === "enabled" && host.hypervModule;
     checks.push({
       id: "hyperv",
       title: "Hyper-V",
-      state: host.hypervFeature === "unavailable" ? "error" : !featureOk ? "error" : !host.vmmsRunning ? "warn" : "ok",
+      state: host.hypervFeature === "unavailable" ? "error" : !featureOk ? "error" : !host.vmmsRunning || !host.windowsHypervisorRunning ? "warn" : "ok",
       text:
         host.hypervFeature === "unavailable"
           ? "Hyper-V gibt es in dieser Windows-Version nicht. Wechsle unten zu QEMU."
@@ -97,7 +122,11 @@ export function Setup({
               ? "Hyper-V ist an, aber die Verwaltungswerkzeuge fehlen. Nestbox kann sie nachinstallieren."
               : !host.vmmsRunning
                 ? "Hyper-V ist eingeschaltet, läuft aber noch nicht. Starte den PC einmal neu."
-                : "Ist eingeschaltet und läuft.",
+                : !host.windowsHypervisorRunning
+                  ? host.virtualizationEnabled
+                    ? "Hyper-V ist eingeschaltet, der Hypervisor startet aber nicht. Starte den PC neu; hilft das nicht, führe in einer Admin-Eingabeaufforderung „bcdedit /set hypervisorlaunchtype auto“ aus und starte erneut."
+                    : "Hyper-V ist eingeschaltet, kann aber erst laufen, wenn die Virtualisierung (siehe oben) aktiv ist."
+                  : "Ist eingeschaltet und läuft.",
       action:
         host.hypervFeature !== "unavailable" && !featureOk ? (
           <Button size="sm" variant="primary" loading={busy === "hyperv"} icon={<ShieldCheck className="size-4" />} onClick={() => run("hyperv", () => api.enableFeature("Microsoft-Hyper-V"))}>
@@ -324,7 +353,7 @@ function CheckRow({ check, first, delay }: { check: Check; first: boolean; delay
           <div className="mt-2">
             <button onClick={() => setOpen(!open)} className="inline-flex items-center gap-1 text-[13px] font-medium text-accent-text">
               <ChevronRight className={cx("size-3.5 transition-transform", open && "rotate-90")} />
-              So schaltest du sie ein
+              {check.stepsLabel ?? "So schaltest du sie ein"}
             </button>
             {open && (
               <ol className="mt-2 list-decimal space-y-1 pl-5 text-[13px] text-text-2 anim-fade">

@@ -8,7 +8,7 @@ rust-version = "1.77"
 
 [lib]
 name = "nestbox_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -29,3 +29,11 @@ codegen-units = 1
 lto = true
 opt-level = "s"
 strip = true
+
+# Entwicklungs-Build ohne Debug-Symbole: spart mehrere GB Plattenplatz
+[profile.dev]
+debug = false
+incremental = false
+
+[profile.dev.package."*"]
+debug = false

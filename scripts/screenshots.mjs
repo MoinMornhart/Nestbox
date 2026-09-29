@@ -22,6 +22,8 @@ const SHOTS = [
   ["einrichtung-bereit", "Einrichtung – alles bereit", "Bildschirme", "?mock=bereit&view=setup"],
   ["einrichtung-home", "Einrichtung – Windows Home (QEMU)", "Bildschirme", "?mock=home"],
   ["einrichtung-neustart", "Einrichtung – Neustart nötig", "Bildschirme", "?mock=neustart"],
+  ["einrichtung-vm", "Einrichtung – Windows läuft selbst in einer VM", "Bildschirme", "?mock=vm",
+    async (p) => { await p.getByText("So schaltest du sie ein").first().click(); await p.waitForTimeout(300); }],
   ["assistent-1", "Assistent 1 – Betriebssystem wählen", "Bildschirme", "?view=wizard"],
   ["assistent-1-iso", "Assistent 1 – ISO übernommen", "Bildschirme", `?view=wizard&iso=${ISO}`],
   ["assistent-2", "Assistent 2 – Name", "Bildschirme", `?view=wizard&step=1&iso=${ISO}`],
