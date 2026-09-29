@@ -535,7 +535,7 @@ export function AppSettingsDialog({
 
       <div className="mb-2 mt-6 flex items-center gap-3 border-t border-line pt-5 text-[12.5px] text-muted">
         <NestboxLogo size={22} />
-        Nestbox 1.0 · {host.windowsName} · {host.activeBackend === "virtualbox" ? "VirtualBox" : "QEMU"}
+        Nestbox 0.9 · {host.windowsName} · {host.activeBackend === "virtualbox" ? "VirtualBox" : "QEMU"}
       </div>
       {error && <ErrorPanel error={error} />}
     </Dialog>

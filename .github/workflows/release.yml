@@ -1,0 +1,63 @@
+# Baut den Windows-Installer und veröffentlicht ihn als GitHub-Release.
+# Auslöser: ein Tag wie „v0.9.0“ oder von Hand unter „Actions → Installer bauen → Run workflow“.
+# Die Dateien heißen immer gleich (Nestbox-Setup.exe, Nestbox.msi), damit der
+# Download-Link …/releases/latest/download/Nestbox-Setup.exe dauerhaft funktioniert.
+name: Installer bauen
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Installer bauen
+        run: npm run tauri build
+
+      - name: Dateien mit festen Namen ablegen
+        shell: pwsh
+        run: |
+          $bundle = "src-tauri/target/release/bundle"
+          New-Item -ItemType Directory -Force out | Out-Null
+          Copy-Item (Get-ChildItem "$bundle/nsis/*-setup.exe" | Select-Object -First 1).FullName out/Nestbox-Setup.exe
+          Copy-Item (Get-ChildItem "$bundle/msi/*.msi" | Select-Object -First 1).FullName out/Nestbox.msi
+          Get-ChildItem out | Format-Table Name, Length
+
+      - name: Release veröffentlichen
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $tag = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { "v$version" }
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --title "Nestbox $version (Vorschau)" --notes-file .github/release-notes.md --target $env:GITHUB_SHA
+          }
+          gh release upload $tag out/Nestbox-Setup.exe out/Nestbox.msi --clobber

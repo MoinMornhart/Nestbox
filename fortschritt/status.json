@@ -37,8 +37,24 @@
       "state": "open"
     }
   ],
-  "now": "Optimiere VirtualBox-VMs für flüssiges Video (3D, Ton, Gasterweiterungen)",
+  "now": "Mache GitHub schöner und richte den automatischen Installer-Download ein",
   "files": [
+    {
+      "path": "docs/logo.svg",
+      "t": "2026-09-29T16:23:00.835Z"
+    },
+    {
+      "path": ".github/release-notes.md",
+      "t": "2026-09-29T16:23:00.835Z"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "t": "2026-09-29T16:23:00.835Z"
+    },
+    {
+      "path": "README.md",
+      "t": "2026-09-29T16:23:00.835Z"
+    },
     {
       "path": "src-tauri/Cargo.toml",
       "t": "2026-09-29T11:46:54.166Z"
@@ -68,10 +84,6 @@
       "t": "2026-09-29T11:14:11.838Z"
     },
     {
-      "path": "README.md",
-      "t": "2026-09-29T10:59:30.418Z"
-    },
-    {
       "path": "src/screens/Setup.tsx",
       "t": "2026-09-29T10:59:30.418Z"
     },
@@ -86,21 +98,25 @@
     {
       "path": "src/lib/mock.ts",
       "t": "2026-09-29T10:04:44.821Z"
-    },
-    {
-      "path": "src/lib/types.ts",
-      "t": "2026-09-29T10:04:44.821Z"
-    },
-    {
-      "path": "src-tauri/src/error.rs",
-      "t": "2026-09-29T10:04:44.821Z"
-    },
-    {
-      "path": "src-tauri/src/commands.rs",
-      "t": "2026-09-29T09:49:22.939Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-09-29T16:23:00.835Z",
+      "text": "Version auf 0.9.0 (Vorschau) gesetzt"
+    },
+    {
+      "t": "2026-09-29T16:23:00.835Z",
+      "text": "GitHub-Workflow „Installer bauen“: baut Nestbox-Setup.exe und Nestbox.msi und hängt sie ans Release"
+    },
+    {
+      "t": "2026-09-29T16:23:00.834Z",
+      "text": "README neu gestaltet: Logo, Download-Knopf, Screenshots (hell/dunkel), Funktionen, FAQ; Entwicklerteil eingeklappt"
+    },
+    {
+      "t": "2026-09-29T12:02:02.816Z",
+      "text": "Kaputte QEMU-Installation entfernt – 1,6 GB frei"
+    },
     {
       "t": "2026-09-29T11:46:54.164Z",
       "text": "Nestbox startet jetzt nur einmal – ein zweiter Start holt das offene Fenster nach vorne (verhindert WebView2-Absturz)"
@@ -280,12 +296,8 @@
   ],
   "waiting": [
     {
-      "t": "2026-09-29T10:59:30.418Z",
-      "text": "Bitte in Proxmox die Festplatte dieser Windows-VM vergrößern (+20–30 GB) und am besten CPU-Typ „host“ einstellen"
-    },
-    {
-      "t": "2026-09-29T11:46:54.166Z",
-      "text": "Bitte die UAC-Abfrage zum Entfernen der kaputten QEMU-Installation mit „Ja“ bestätigen (gibt 1 GB frei)"
+      "t": "2026-09-29T12:02:02.816Z",
+      "text": "Proxmox: Festplatte dieser Windows-VM +20–30 GB und CPU-Typ „host“, dann VM aus- und einschalten"
     }
   ],
   "problems": [
@@ -320,7 +332,8 @@
     {
       "t": "2026-09-29T11:46:54.166Z",
       "text": "Laufwerk C: fast voll (0,17 GB frei)",
-      "fix": "Kaputtes QEMU deinstallieren (1 GB) und die Festplatte der Windows-VM in Proxmox vergrößern"
+      "fix": "Kaputtes QEMU deinstallieren (1 GB) und die Festplatte der Windows-VM in Proxmox vergrößern",
+      "solved": "2026-09-29T12:02:02.815Z"
     }
   ],
   "images": [
@@ -802,6 +815,10 @@
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-09-29T11:46:54.190Z",
-  "icloudConflicts": []
+  "updated": "2026-09-29T16:23:00.866Z",
+  "icloudConflicts": [
+    ".git/index 2",
+    ".git/refs/heads/main 2",
+    ".git/refs/remotes/origin/main 2"
+  ]
 }
