@@ -10,6 +10,7 @@ mod store;
 use std::sync::{Arc, Mutex};
 
 use commands::AppState;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -23,6 +24,13 @@ pub fn run() {
     let state = Arc::new(AppState { store: Mutex::new(store) });
 
     tauri::Builder::default()
+        // Nur eine Nestbox gleichzeitig: Ein zweiter Start holt das offene Fenster nach vorne.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.unminimize();
+                let _ = w.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(state)

@@ -40,6 +40,14 @@
   "now": "Optimiere VirtualBox-VMs für flüssiges Video (3D, Ton, Gasterweiterungen)",
   "files": [
     {
+      "path": "src-tauri/Cargo.toml",
+      "t": "2026-09-29T11:46:54.166Z"
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "t": "2026-09-29T11:46:54.166Z"
+    },
+    {
       "path": "scripts/progress.mjs",
       "t": "2026-09-29T11:14:11.838Z"
     },
@@ -88,19 +96,15 @@
       "t": "2026-09-29T10:04:44.821Z"
     },
     {
-      "path": "src-tauri/Cargo.toml",
-      "t": "2026-09-29T09:49:22.939Z"
-    },
-    {
-      "path": "src-tauri/src/lib.rs",
-      "t": "2026-09-29T09:49:22.939Z"
-    },
-    {
       "path": "src-tauri/src/commands.rs",
       "t": "2026-09-29T09:49:22.939Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-09-29T11:46:54.164Z",
+      "text": "Nestbox startet jetzt nur einmal – ein zweiter Start holt das offene Fenster nach vorne (verhindert WebView2-Absturz)"
+    },
     {
       "t": "2026-09-29T11:14:11.838Z",
       "text": "Fortschrittsseite meldet jetzt iCloud-Konfliktdateien automatisch (iCloud hatte screenshots.mjs und .git/config umbenannt – behoben)"
@@ -278,6 +282,10 @@
     {
       "t": "2026-09-29T10:59:30.418Z",
       "text": "Bitte in Proxmox die Festplatte dieser Windows-VM vergrößern (+20–30 GB) und am besten CPU-Typ „host“ einstellen"
+    },
+    {
+      "t": "2026-09-29T11:46:54.166Z",
+      "text": "Bitte die UAC-Abfrage zum Entfernen der kaputten QEMU-Installation mit „Ja“ bestätigen (gibt 1 GB frei)"
     }
   ],
   "problems": [
@@ -308,6 +316,11 @@
       "t": "2026-09-29T10:59:30.418Z",
       "text": "In dieser Windows-VM ist keine Hardware-Virtualisierung verfügbar – VirtualBox kann hier keine VMs starten",
       "fix": "In Proxmox CPU-Typ „host“ einstellen (dann laufen auch VirtualBox und schnelles QEMU)"
+    },
+    {
+      "t": "2026-09-29T11:46:54.166Z",
+      "text": "Laufwerk C: fast voll (0,17 GB frei)",
+      "fix": "Kaputtes QEMU deinstallieren (1 GB) und die Festplatte der Windows-VM in Proxmox vergrößern"
     }
   ],
   "images": [
@@ -789,6 +802,6 @@
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-09-29T11:14:11.860Z",
+  "updated": "2026-09-29T11:46:54.190Z",
   "icloudConflicts": []
 }
