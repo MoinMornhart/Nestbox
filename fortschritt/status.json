@@ -1,0 +1,603 @@
+{
+  "phases": [
+    {
+      "name": "Projektstruktur",
+      "state": "done"
+    },
+    {
+      "name": "Einrichtungsprüfung",
+      "state": "done"
+    },
+    {
+      "name": "Hyper-V-Backend",
+      "state": "done"
+    },
+    {
+      "name": "Erstell-Assistent",
+      "state": "done"
+    },
+    {
+      "name": "Hauptansicht",
+      "state": "active"
+    },
+    {
+      "name": "Snapshots",
+      "state": "open"
+    },
+    {
+      "name": "QEMU-Backend",
+      "state": "open"
+    },
+    {
+      "name": "Feinschliff & README",
+      "state": "open"
+    },
+    {
+      "name": "Test & Start",
+      "state": "open"
+    }
+  ],
+  "now": "Nehme Vorschaubilder aller Bildschirme und Overlays auf",
+  "files": [
+    {
+      "path": "scripts/screenshots.mjs",
+      "t": "2026-09-29T06:04:59.854Z"
+    },
+    {
+      "path": "src/App.tsx",
+      "t": "2026-09-29T06:04:59.854Z"
+    },
+    {
+      "path": "src/screens/dialogs.tsx",
+      "t": "2026-09-29T06:04:59.854Z"
+    },
+    {
+      "path": "src/screens/VmCard.tsx",
+      "t": "2026-09-29T06:04:59.854Z"
+    },
+    {
+      "path": "src/screens/Dashboard.tsx",
+      "t": "2026-09-29T06:04:59.854Z"
+    },
+    {
+      "path": "src/lib/presets.ts",
+      "t": "2026-09-29T05:59:59.584Z"
+    },
+    {
+      "path": "src/lib/os.tsx",
+      "t": "2026-09-29T05:59:59.584Z"
+    },
+    {
+      "path": "src/lib/mock.ts",
+      "t": "2026-09-29T05:59:59.584Z"
+    },
+    {
+      "path": "src/components/ui.tsx",
+      "t": "2026-09-29T05:59:59.584Z"
+    },
+    {
+      "path": "src/screens/Setup.tsx",
+      "t": "2026-09-29T05:59:59.584Z"
+    },
+    {
+      "path": "src/screens/wizard/Wizard.tsx",
+      "t": "2026-09-29T05:59:59.584Z"
+    },
+    {
+      "path": "src-tauri/src/ps.rs",
+      "t": "2026-09-29T05:52:32.928Z"
+    },
+    {
+      "path": "src-tauri/src/elevate.rs",
+      "t": "2026-09-29T05:52:32.928Z"
+    },
+    {
+      "path": "src-tauri/src/host.rs",
+      "t": "2026-09-29T05:52:32.928Z"
+    },
+    {
+      "path": "src-tauri/src/backend/qmp.rs",
+      "t": "2026-09-29T05:52:32.928Z"
+    }
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T06:04:59.854Z",
+      "text": "Screenshot-Skript mit Playwright (hell + dunkel) angelegt"
+    },
+    {
+      "t": "2026-09-29T06:04:59.853Z",
+      "text": "Hauptansicht, VM-Karten, Kontextmenü und alle Dialoge (Sicherungspunkte, Löschen, Umbenennen, Einstellungen) gebaut"
+    },
+    {
+      "t": "2026-09-29T06:00:10.012Z",
+      "text": "Build-Tools-Installation wartet auf deine UAC-Bestätigung"
+    },
+    {
+      "t": "2026-09-29T05:59:59.584Z",
+      "text": "Erstell-Assistent mit Drag & Drop, OS-Erkennung am Dateinamen, Leistungsstufen und Fortschrittsanzeige"
+    },
+    {
+      "t": "2026-09-29T05:59:59.582Z",
+      "text": "Oberfläche: Farbschema, Bausteine (Dialoge, Menüs, Tooltips, Fehlermeldungen), Einrichtungsbildschirm"
+    },
+    {
+      "t": "2026-09-29T05:52:32.928Z",
+      "text": "Alle Tauri-Commands angelegt (VMs, Einrichtung, Einstellungen, Sicherungspunkte)"
+    },
+    {
+      "t": "2026-09-29T05:52:32.928Z",
+      "text": "VmBackend-Trait mit HyperVBackend und QemuBackend (inkl. QMP-Client) geschrieben"
+    },
+    {
+      "t": "2026-09-29T05:52:32.927Z",
+      "text": "Einrichtungsprüfung (host.rs): Edition, Hyper-V, WHPX, BIOS-Virtualisierung, Gruppe Hyper-V-Administratoren, QEMU"
+    },
+    {
+      "t": "2026-09-29T05:44:33.814Z",
+      "text": "Rust-Build-Ordner wird nach %LOCALAPPDATA%\\Nestbox\\build verlegt, damit iCloud keine GB-großen Build-Dateien synchronisiert"
+    },
+    {
+      "t": "2026-09-29T05:44:33.813Z",
+      "text": "Projektstruktur angelegt (Tauri 2, React, TypeScript, Vite, Tailwind), npm-Pakete installiert"
+    },
+    {
+      "t": "2026-09-29T05:39:11.344Z",
+      "text": "Installation von Rust und Visual Studio Build Tools gestartet"
+    },
+    {
+      "t": "2026-09-29T05:39:11.343Z",
+      "text": "Entscheidung: privates GitHub-Repo, kein Proxmox-Guide, Toolchain wird installiert"
+    },
+    {
+      "t": "2026-09-29T05:36:21.978Z",
+      "text": "Fortschritts-Webseite angelegt"
+    },
+    {
+      "t": "2026-09-29T05:36:21.977Z",
+      "text": "Projektordner geprüft: leer. Node.js 24 vorhanden, Rust und Visual Studio Build Tools fehlen noch"
+    }
+  ],
+  "waiting": [
+    {
+      "t": "2026-09-29T06:00:10.011Z",
+      "text": "Bitte die Windows-Abfrage (UAC) für die Installation der Visual Studio Build Tools mit „Ja“ bestätigen – sonst kann die App nicht kompiliert werden."
+    }
+  ],
+  "problems": [],
+  "images": [
+    {
+      "file": "einrichtung-dunkel.png",
+      "base": "einrichtung",
+      "title": "Einrichtung – Hyper-V fehlt noch",
+      "group": "Bildschirme",
+      "order": 1,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:05:07.213Z"
+    },
+    {
+      "file": "einrichtung-hell.png",
+      "base": "einrichtung",
+      "title": "Einrichtung – Hyper-V fehlt noch",
+      "group": "Bildschirme",
+      "order": 1,
+      "theme": "hell",
+      "t": "2026-09-29T06:05:04.505Z"
+    },
+    {
+      "file": "einrichtung-bereit-dunkel.png",
+      "base": "einrichtung-bereit",
+      "title": "Einrichtung – alles bereit",
+      "group": "Bildschirme",
+      "order": 2,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:05:12.620Z"
+    },
+    {
+      "file": "einrichtung-bereit-hell.png",
+      "base": "einrichtung-bereit",
+      "title": "Einrichtung – alles bereit",
+      "group": "Bildschirme",
+      "order": 2,
+      "theme": "hell",
+      "t": "2026-09-29T06:05:09.930Z"
+    },
+    {
+      "file": "einrichtung-home-dunkel.png",
+      "base": "einrichtung-home",
+      "title": "Einrichtung – Windows Home (QEMU)",
+      "group": "Bildschirme",
+      "order": 3,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:05:18.116Z"
+    },
+    {
+      "file": "einrichtung-home-hell.png",
+      "base": "einrichtung-home",
+      "title": "Einrichtung – Windows Home (QEMU)",
+      "group": "Bildschirme",
+      "order": 3,
+      "theme": "hell",
+      "t": "2026-09-29T06:05:15.374Z"
+    },
+    {
+      "file": "einrichtung-neustart-dunkel.png",
+      "base": "einrichtung-neustart",
+      "title": "Einrichtung – Neustart nötig",
+      "group": "Bildschirme",
+      "order": 4,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:05:25.303Z"
+    },
+    {
+      "file": "einrichtung-neustart-hell.png",
+      "base": "einrichtung-neustart",
+      "title": "Einrichtung – Neustart nötig",
+      "group": "Bildschirme",
+      "order": 4,
+      "theme": "hell",
+      "t": "2026-09-29T06:05:22.579Z"
+    },
+    {
+      "file": "assistent-1-dunkel.png",
+      "base": "assistent-1",
+      "title": "Assistent 1 – Betriebssystem wählen",
+      "group": "Bildschirme",
+      "order": 5,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:05:30.814Z"
+    },
+    {
+      "file": "assistent-1-hell.png",
+      "base": "assistent-1",
+      "title": "Assistent 1 – Betriebssystem wählen",
+      "group": "Bildschirme",
+      "order": 5,
+      "theme": "hell",
+      "t": "2026-09-29T06:05:28.010Z"
+    },
+    {
+      "file": "assistent-1-iso-dunkel.png",
+      "base": "assistent-1-iso",
+      "title": "Assistent 1 – ISO übernommen",
+      "group": "Bildschirme",
+      "order": 6,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:05:35.946Z"
+    },
+    {
+      "file": "assistent-1-iso-hell.png",
+      "base": "assistent-1-iso",
+      "title": "Assistent 1 – ISO übernommen",
+      "group": "Bildschirme",
+      "order": 6,
+      "theme": "hell",
+      "t": "2026-09-29T06:05:33.397Z"
+    },
+    {
+      "file": "assistent-2-dunkel.png",
+      "base": "assistent-2",
+      "title": "Assistent 2 – Name",
+      "group": "Bildschirme",
+      "order": 7,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:05:41.096Z"
+    },
+    {
+      "file": "assistent-2-hell.png",
+      "base": "assistent-2",
+      "title": "Assistent 2 – Name",
+      "group": "Bildschirme",
+      "order": 7,
+      "theme": "hell",
+      "t": "2026-09-29T06:05:38.491Z"
+    },
+    {
+      "file": "assistent-3-dunkel.png",
+      "base": "assistent-3",
+      "title": "Assistent 3 – Leistung (Erweitert)",
+      "group": "Bildschirme",
+      "order": 8,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:05:46.249Z"
+    },
+    {
+      "file": "assistent-3-hell.png",
+      "base": "assistent-3",
+      "title": "Assistent 3 – Leistung (Erweitert)",
+      "group": "Bildschirme",
+      "order": 8,
+      "theme": "hell",
+      "t": "2026-09-29T06:05:43.696Z"
+    },
+    {
+      "file": "assistent-4-dunkel.png",
+      "base": "assistent-4",
+      "title": "Assistent 4 – Zusammenfassung",
+      "group": "Bildschirme",
+      "order": 9,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:05:51.380Z"
+    },
+    {
+      "file": "assistent-4-hell.png",
+      "base": "assistent-4",
+      "title": "Assistent 4 – Zusammenfassung",
+      "group": "Bildschirme",
+      "order": 9,
+      "theme": "hell",
+      "t": "2026-09-29T06:05:48.830Z"
+    },
+    {
+      "file": "hauptansicht-dunkel.png",
+      "base": "hauptansicht",
+      "title": "Hauptansicht",
+      "group": "Bildschirme",
+      "order": 10,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:05:56.731Z"
+    },
+    {
+      "file": "hauptansicht-hell.png",
+      "base": "hauptansicht",
+      "title": "Hauptansicht",
+      "group": "Bildschirme",
+      "order": 10,
+      "theme": "hell",
+      "t": "2026-09-29T06:05:53.987Z"
+    },
+    {
+      "file": "hauptansicht-leer-dunkel.png",
+      "base": "hauptansicht-leer",
+      "title": "Hauptansicht – noch keine VMs",
+      "group": "Bildschirme",
+      "order": 11,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:06:01.837Z"
+    },
+    {
+      "file": "hauptansicht-leer-hell.png",
+      "base": "hauptansicht-leer",
+      "title": "Hauptansicht – noch keine VMs",
+      "group": "Bildschirme",
+      "order": 11,
+      "theme": "hell",
+      "t": "2026-09-29T06:05:59.287Z"
+    },
+    {
+      "file": "einstellungen-dunkel.png",
+      "base": "einstellungen",
+      "title": "Einstellungen",
+      "group": "Bildschirme",
+      "order": 12,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:06:07.100Z"
+    },
+    {
+      "file": "einstellungen-hell.png",
+      "base": "einstellungen",
+      "title": "Einstellungen",
+      "group": "Bildschirme",
+      "order": 12,
+      "theme": "hell",
+      "t": "2026-09-29T06:06:04.484Z"
+    },
+    {
+      "file": "erstellen-fortschritt-dunkel.png",
+      "base": "erstellen-fortschritt",
+      "title": "Erstellen – Fortschrittsanzeige",
+      "group": "Overlays",
+      "order": 13,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:06:13.123Z"
+    },
+    {
+      "file": "erstellen-fortschritt-hell.png",
+      "base": "erstellen-fortschritt",
+      "title": "Erstellen – Fortschrittsanzeige",
+      "group": "Overlays",
+      "order": 13,
+      "theme": "hell",
+      "t": "2026-09-29T06:06:10.140Z"
+    },
+    {
+      "file": "erstellen-fertig-dunkel.png",
+      "base": "erstellen-fertig",
+      "title": "Erstellen – fertig",
+      "group": "Overlays",
+      "order": 14,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:06:28.314Z"
+    },
+    {
+      "file": "erstellen-fertig-hell.png",
+      "base": "erstellen-fertig",
+      "title": "Erstellen – fertig",
+      "group": "Overlays",
+      "order": 14,
+      "theme": "hell",
+      "t": "2026-09-29T06:06:20.733Z"
+    },
+    {
+      "file": "erstellen-fehler-dunkel.png",
+      "base": "erstellen-fehler",
+      "title": "Erstellen – Fehlermeldung",
+      "group": "Overlays",
+      "order": 15,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:06:40.444Z"
+    },
+    {
+      "file": "erstellen-fehler-hell.png",
+      "base": "erstellen-fehler",
+      "title": "Erstellen – Fehlermeldung",
+      "group": "Overlays",
+      "order": 15,
+      "theme": "hell",
+      "t": "2026-09-29T06:06:34.341Z"
+    },
+    {
+      "file": "kontextmenue-dunkel.png",
+      "base": "kontextmenue",
+      "title": "Kontextmenü einer VM",
+      "group": "Overlays",
+      "order": 16,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:06:46.416Z"
+    },
+    {
+      "file": "kontextmenue-hell.png",
+      "base": "kontextmenue",
+      "title": "Kontextmenü einer VM",
+      "group": "Overlays",
+      "order": 16,
+      "theme": "hell",
+      "t": "2026-09-29T06:06:43.446Z"
+    },
+    {
+      "file": "dialog-sicherungspunkte-dunkel.png",
+      "base": "dialog-sicherungspunkte",
+      "title": "Sicherungspunkte",
+      "group": "Overlays",
+      "order": 17,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:06:52.902Z"
+    },
+    {
+      "file": "dialog-sicherungspunkte-hell.png",
+      "base": "dialog-sicherungspunkte",
+      "title": "Sicherungspunkte",
+      "group": "Overlays",
+      "order": 17,
+      "theme": "hell",
+      "t": "2026-09-29T06:06:49.662Z"
+    },
+    {
+      "file": "dialog-wiederherstellen-dunkel.png",
+      "base": "dialog-wiederherstellen",
+      "title": "Bestätigung – Wiederherstellen",
+      "group": "Overlays",
+      "order": 18,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:06:59.014Z"
+    },
+    {
+      "file": "dialog-wiederherstellen-hell.png",
+      "base": "dialog-wiederherstellen",
+      "title": "Bestätigung – Wiederherstellen",
+      "group": "Overlays",
+      "order": 18,
+      "theme": "hell",
+      "t": "2026-09-29T06:06:55.912Z"
+    },
+    {
+      "file": "dialog-loeschen-dunkel.png",
+      "base": "dialog-loeschen",
+      "title": "Bestätigung – Löschen",
+      "group": "Overlays",
+      "order": 19,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:07:04.979Z"
+    },
+    {
+      "file": "dialog-loeschen-hell.png",
+      "base": "dialog-loeschen",
+      "title": "Bestätigung – Löschen",
+      "group": "Overlays",
+      "order": 19,
+      "theme": "hell",
+      "t": "2026-09-29T06:07:02.009Z"
+    },
+    {
+      "file": "dialog-ausschalten-dunkel.png",
+      "base": "dialog-ausschalten",
+      "title": "Bestätigung – Sofort ausschalten",
+      "group": "Overlays",
+      "order": 20,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:07:10.152Z"
+    },
+    {
+      "file": "dialog-ausschalten-hell.png",
+      "base": "dialog-ausschalten",
+      "title": "Bestätigung – Sofort ausschalten",
+      "group": "Overlays",
+      "order": 20,
+      "theme": "hell",
+      "t": "2026-09-29T06:07:07.553Z"
+    },
+    {
+      "file": "dialog-umbenennen-dunkel.png",
+      "base": "dialog-umbenennen",
+      "title": "Umbenennen",
+      "group": "Overlays",
+      "order": 21,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:07:15.473Z"
+    },
+    {
+      "file": "dialog-umbenennen-hell.png",
+      "base": "dialog-umbenennen",
+      "title": "Umbenennen",
+      "group": "Overlays",
+      "order": 21,
+      "theme": "hell",
+      "t": "2026-09-29T06:07:12.803Z"
+    },
+    {
+      "file": "dialog-vm-einstellungen-dunkel.png",
+      "base": "dialog-vm-einstellungen",
+      "title": "VM-Einstellungen",
+      "group": "Overlays",
+      "order": 22,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:07:20.653Z"
+    },
+    {
+      "file": "dialog-vm-einstellungen-hell.png",
+      "base": "dialog-vm-einstellungen",
+      "title": "VM-Einstellungen",
+      "group": "Overlays",
+      "order": 22,
+      "theme": "hell",
+      "t": "2026-09-29T06:07:18.068Z"
+    },
+    {
+      "file": "fehler-toast-dunkel.png",
+      "base": "fehler-toast",
+      "title": "Fehlermeldung mit Lösungsvorschlag",
+      "group": "Overlays",
+      "order": 23,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:07:27.978Z"
+    },
+    {
+      "file": "fehler-toast-hell.png",
+      "base": "fehler-toast",
+      "title": "Fehlermeldung mit Lösungsvorschlag",
+      "group": "Overlays",
+      "order": 23,
+      "theme": "hell",
+      "t": "2026-09-29T06:07:24.319Z"
+    },
+    {
+      "file": "tooltip-dunkel.png",
+      "base": "tooltip",
+      "title": "Tooltip für Fachbegriffe",
+      "group": "Overlays",
+      "order": 24,
+      "theme": "dunkel",
+      "t": "2026-09-29T06:07:34.628Z"
+    },
+    {
+      "file": "tooltip-hell.png",
+      "base": "tooltip",
+      "title": "Tooltip für Fachbegriffe",
+      "group": "Overlays",
+      "order": 24,
+      "theme": "hell",
+      "t": "2026-09-29T06:07:31.292Z"
+    }
+  ],
+  "updated": "2026-09-29T06:07:34.939Z"
+}
