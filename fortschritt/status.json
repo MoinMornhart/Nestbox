@@ -37,11 +37,11 @@
       "state": "open"
     }
   ],
-  "now": "Installer ist fertig – Tests mit echten VMs folgen, sobald die Windows-VM mehr Platz und CPU-Typ „host“ hat",
+  "now": "Warte auf deine Rückmeldung zum Test von 0.9.1",
   "files": [
     {
       "path": "src-tauri/src/host.rs",
-      "t": "2026-09-29T16:58:36.860Z"
+      "t": "2026-09-30T09:09:34.750Z"
     },
     {
       "path": ".gitignore",
@@ -101,6 +101,18 @@
     }
   ],
   "log": [
+    {
+      "t": "2026-09-30T09:09:34.750Z",
+      "text": "Version 0.9.2 wird gebaut"
+    },
+    {
+      "t": "2026-09-30T09:09:34.749Z",
+      "text": "Dein Test: VirtualBox-Installation scheiterte am Microsoft Store (Zertifikatsfehler) – winget nutzt jetzt nur noch die winget-Quelle"
+    },
+    {
+      "t": "2026-09-29T17:11:51.144Z",
+      "text": "Installer 0.9.1 fertig und im Ordner Installer/ abgelegt"
+    },
     {
       "t": "2026-09-29T16:58:36.860Z",
       "text": "Version 0.9.1 mit der Korrektur wird gebaut"
@@ -839,6 +851,6 @@
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-09-29T16:58:36.894Z",
+  "updated": "2026-09-30T09:09:34.898Z",
   "icloudConflicts": []
 }

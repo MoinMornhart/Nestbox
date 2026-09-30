@@ -257,7 +257,9 @@ pub fn install_software(kind: BackendKind) -> AppResult<()> {
         BackendKind::Virtualbox => ("Oracle.VirtualBox", "VirtualBox"),
         BackendKind::Qemu => ("SoftwareFreedomConservancy.QEMU", "QEMU"),
     };
-    let args = ["install", "--id", id, "--exact", "--silent", "--accept-package-agreements", "--accept-source-agreements", "--disable-interactivity"];
+    // „--source winget“: nur die normale winget-Quelle. Sonst fragt winget auch den Microsoft
+    // Store – schlägt der fehl (z. B. Zertifikatsfehler), bricht die ganze Installation ab.
+    let args = ["install", "--id", id, "--exact", "--source", "winget", "--silent", "--accept-package-agreements", "--accept-source-agreements", "--disable-interactivity"];
     logger::write("WINGET", &format!("winget {}", args.join(" ")));
     let out = hidden_command("winget").args(args).output().map_err(|e| {
         AppError::new(
@@ -266,7 +268,14 @@ pub fn install_software(kind: BackendKind) -> AppResult<()> {
         )
         .with_details(e.to_string())
     })?;
-    let text = format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
+    let raw_text = format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
+    // Fortschrittsbalken und Drehzeichen von winget entfernen – übrig bleiben die eigentlichen Meldungen.
+    let text = raw_text
+        .split(['\r', '\n'])
+        .map(str::trim)
+        .filter(|l| !l.is_empty() && !l.contains('█') && !l.contains('▒') && !matches!(*l, "-" | "\\" | "|" | "/"))
+        .collect::<Vec<_>>()
+        .join("\n");
     logger::write("WINGET", &ps::truncate(&text, 3000));
     // 0x8A15002B: bereits installiert, kein Update verfügbar – auch in Ordnung.
     let code = out.status.code().unwrap_or(-1);
@@ -276,6 +285,8 @@ pub fn install_software(kind: BackendKind) -> AppResult<()> {
     let lower = text.to_lowercase();
     let hint = if text.contains("1602") || lower.contains("cancel") || lower.contains("abgebrochen") {
         "Die Installation wurde abgebrochen. Bestätige die Windows-Abfrage („Möchten Sie zulassen …?“) mit „Ja“."
+    } else if lower.contains("certificate") || lower.contains("zertifikat") || lower.contains("0x8a15005e") {
+        "Windows konnte keine sichere Verbindung zum Download-Server aufbauen (Zertifikatsfehler). Prüfe Datum und Uhrzeit des PCs und ob ein Virenscanner oder Proxy HTTPS-Verbindungen umleitet – oder installiere das Programm über die Download-Seite."
     } else if lower.contains("disk") || lower.contains("speicherplatz") {
         "Auf dem Laufwerk ist nicht genug Platz frei. Schaffe etwas Platz und versuche es erneut."
     } else {
