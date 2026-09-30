@@ -20,7 +20,7 @@ const wizardInit: WizardInit | undefined =
 const initialDialog: OpenDialog = (() => {
   const d = !inTauri ? params.get("dialog") : null;
   if (!d) return null;
-  if (d === "app-settings") return { kind: "app-settings" };
+  if (d === "app-settings" || d === "hyperv-import") return { kind: d };
   const [kind, id] = d.split(":");
   return { kind: kind as "snapshots", id };
 })();
@@ -53,7 +53,7 @@ export default function App() {
     (async () => {
       try {
         const { h, s } = await recheck();
-        const ready = h.vboxReady || h.qemuReady;
+        const ready = h.vboxReady || h.qemuReady || h.hypervReady;
         setView(forcedView ?? (s.setupDone && ready ? "dashboard" : "setup"));
       } catch (e) {
         setFatal(e as AppError);

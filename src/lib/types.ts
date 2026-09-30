@@ -1,4 +1,6 @@
-export type BackendKind = "virtualbox" | "qemu";
+export type BackendKind = "virtualbox" | "qemu" | "hyperv";
+
+export const BACKEND_LABEL: Record<BackendKind, string> = { virtualbox: "VirtualBox", qemu: "QEMU", hyperv: "Hyper-V" };
 export type BackendChoice = "auto" | BackendKind;
 export type OsFamily = "windows" | "linux";
 export type PowerState = "running" | "paused" | "off" | "starting" | "stopping" | "saving" | "unknown" | "missing";
@@ -35,6 +37,25 @@ export interface HostInfo {
   qemuReady: boolean;
   activeBackend: BackendKind;
   backendChoice: BackendChoice;
+  hypervFeature: "enabled" | "disabled" | "unavailable";
+  hypervModule: boolean;
+  vmmsRunning: boolean;
+  hypervGroupOk: boolean;
+  hypervGroupNeedsRelogin: boolean;
+  hypervReady: boolean;
+}
+
+export interface HyperVCandidate {
+  id: string;
+  name: string;
+  state: string;
+  cpus: number;
+  memoryMb: number;
+  diskGb: number;
+  diskPath: string;
+  path: string;
+  windows: boolean;
+  created: string;
 }
 
 export interface Settings {
@@ -74,6 +95,8 @@ export interface Vm {
   diskPath: string;
   created: string;
   vboxId?: string | null;
+  hypervId?: string | null;
+  imported?: boolean;
   qmpPort?: number | null;
   snapshots: SnapshotMeta[];
   status: VmStatus;

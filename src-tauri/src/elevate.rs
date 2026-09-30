@@ -100,3 +100,15 @@ pub fn run_ps(what: &str, script: &str) -> AppResult<String> {
     }
 }
 
+
+/// Startet ein Programm mit Adminrechten, ohne auf das Ende zu warten (z. B. vmconnect).
+pub fn spawn_program(program: &str, args: Vec<String>) {
+    let program = program.to_string();
+    std::thread::spawn(move || {
+        let mut cmd = StdCommand::new(&program);
+        cmd.args(args.iter().map(|a| if a.contains(' ') { format!("\"{a}\"") } else { a.clone() }));
+        if let Err(e) = ElevatedCommand::new(cmd).output() {
+            logger::error(&format!("{program} mit Adminrechten starten: {e}"));
+        }
+    });
+}

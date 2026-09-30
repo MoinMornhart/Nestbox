@@ -155,7 +155,11 @@ export function Wizard({
       ["folder", "Ordner vorbereiten"],
       ["disk", "Virtuelle Festplatte anlegen"],
       ["vm", backend === "virtualbox" ? "Virtuelle Maschine einrichten" : "Virtuelle Maschine anlegen"],
-      ...(backend === "virtualbox" && family === "windows" ? ([["security", "TPM & Secure Boot einrichten"]] as [string, string][]) : []),
+      ...(backend === "virtualbox" && family === "windows"
+        ? ([["security", "TPM & Secure Boot einrichten"]] as [string, string][])
+        : backend === "hyperv"
+          ? ([["security", family === "windows" ? "Secure Boot & TPM einrichten" : "Secure Boot einrichten"]] as [string, string][])
+          : []),
       ["iso", "Installationsmedium einlegen"],
       ["start", "VM starten"],
     ];
@@ -645,7 +649,12 @@ function Summary({
     ["Speicherort", <span className="selectable break-all">{settings.vmDir}\{name.trim()}</span>],
     [
       "Technik",
-      backend === "virtualbox" ? (
+      backend === "hyperv" ? (
+        <span className="inline-flex items-center">
+          Hyper-V, Generation 2 · Secure Boot{family === "windows" ? " · TPM" : ""} · Netzwerk über „Default Switch“
+          <Info text="Hyper-V ist die Virtualisierung von Windows Pro. Generation 2 = moderne UEFI-VM. Der „Default Switch“ gibt der VM automatisch Internetzugang." />
+        </span>
+      ) : backend === "virtualbox" ? (
         <span className="inline-flex items-center">
           VirtualBox · UEFI{family === "windows" ? " · TPM 2.0 · Secure Boot" : ""} · Internet über deinen PC (NAT)
           <Info text="UEFI ist die moderne Startart. TPM und Secure Boot sind Sicherheitsfunktionen, die Windows 11 voraussetzt. NAT gibt der VM automatisch Internetzugang." />

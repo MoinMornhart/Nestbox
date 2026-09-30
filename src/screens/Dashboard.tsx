@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Plus, Settings as SettingsIcon, Zap } from "lucide-react";
 import { api } from "../lib/api";
-import type { AppError, HostInfo, Settings, Vm } from "../lib/types";
+import { BACKEND_LABEL, type AppError, type HostInfo, type Settings, type Vm } from "../lib/types";
 import { Button, Dialog, IconButton, Tooltip } from "../components/ui";
 import { useToast } from "../components/feedback";
 import { EmptyNest, NestboxLogo } from "../components/Logo";
 import { VmCard, type VmAction } from "./VmCard";
-import { AppSettingsDialog, DeleteDialog, GuestToolsDialog, RenameDialog, SnapshotsDialog, VmSettingsDialog } from "./dialogs";
+import { AppSettingsDialog, DeleteDialog, GuestToolsDialog, ImportHypervDialog, RenameDialog, SnapshotsDialog, VmSettingsDialog } from "./dialogs";
 
-export type OpenDialog = { kind: "snapshots" | "rename" | "delete" | "settings" | "poweroff" | "guesttools"; id: string } | { kind: "app-settings" } | null;
+export type OpenDialog = { kind: "snapshots" | "rename" | "delete" | "settings" | "poweroff" | "guesttools"; id: string } | { kind: "app-settings" } | { kind: "hyperv-import" } | null;
 
 const BUSY_LABEL: Partial<Record<VmAction, string>> = {
   start: "Startet …",
@@ -103,8 +103,8 @@ export function Dashboard({
       <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line bg-bg/80 px-6 backdrop-blur">
         <NestboxLogo size={30} />
         <div className="font-display text-[17px] font-semibold tracking-[-0.01em]">Nestbox</div>
-        <Tooltip text={host.activeBackend === "virtualbox" ? "Neue VMs laufen mit VirtualBox (kostenlos)." : host.qemuAccelerated ? "Neue VMs laufen mit QEMU und der Windows-Hypervisor-Plattform." : "Neue VMs laufen mit QEMU ohne Beschleunigung – das ist langsam."}>
-          <span className="ml-1 rounded-full bg-bg-subtle px-2.5 py-0.5 text-[12px] font-medium text-text-2">{host.activeBackend === "virtualbox" ? "VirtualBox" : "QEMU"}</span>
+        <Tooltip text={host.activeBackend === "virtualbox" ? "Neue VMs laufen mit VirtualBox (kostenlos)." : host.activeBackend === "hyperv" ? "Neue VMs laufen mit Hyper-V, der Virtualisierung von Windows Pro." : host.qemuAccelerated ? "Neue VMs laufen mit QEMU und der Windows-Hypervisor-Plattform." : "Neue VMs laufen mit QEMU ohne Beschleunigung – das ist langsam."}>
+          <span className="ml-1 rounded-full bg-bg-subtle px-2.5 py-0.5 text-[12px] font-medium text-text-2">{BACKEND_LABEL[host.activeBackend]}</span>
         </Tooltip>
         <div className="flex-1" />
         <IconButton label="Einstellungen" tooltipSide="bottom" onClick={() => setDialog({ kind: "app-settings" })}>
@@ -121,9 +121,16 @@ export function Dashboard({
             <EmptyNest />
             <h1 className="mt-6 font-display text-[24px] font-semibold tracking-[-0.02em]">Dein Nest ist noch leer</h1>
             <p className="mt-2 max-w-sm text-[15px] text-text-2">Erstelle deine erste virtuelle Maschine – in weniger als einer Minute ist sie startklar.</p>
-            <Button variant="primary" size="lg" className="mt-6" icon={<Plus className="size-4" strokeWidth={2.5} />} onClick={onNew}>
-              Neue VM erstellen
-            </Button>
+            <div className="mt-6 flex gap-2">
+              <Button variant="primary" size="lg" icon={<Plus className="size-4" strokeWidth={2.5} />} onClick={onNew}>
+                Neue VM erstellen
+              </Button>
+              {host.hypervReady && (
+                <Button size="lg" onClick={() => setDialog({ kind: "hyperv-import" })}>
+                  Hyper-V-VMs übernehmen
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="mx-auto max-w-[1180px] px-6 py-7">
@@ -151,7 +158,10 @@ export function Dashboard({
         <VmSettingsDialog vm={dialogVm} host={host} onClose={() => setDialog(null)} onDone={() => closeAndRefresh("Einstellungen gespeichert")} />
       )}
       {dialog?.kind === "app-settings" && (
-        <AppSettingsDialog settings={settings} host={host} onClose={() => setDialog(null)} onSave={onSaveSettings} onOpenSetup={onOpenSetup} />
+        <AppSettingsDialog settings={settings} host={host} onClose={() => setDialog(null)} onSave={onSaveSettings} onOpenSetup={onOpenSetup} onImportHyperv={() => setDialog({ kind: "hyperv-import" })} />
+      )}
+      {dialog?.kind === "hyperv-import" && (
+        <ImportHypervDialog onClose={() => setDialog(null)} onDone={(n) => closeAndRefresh(n === 1 ? "1 Hyper-V-VM übernommen" : `${n} Hyper-V-VMs übernommen`)} />
       )}
       <Dialog
         open={dialog?.kind === "poweroff" && !!dialogVm}

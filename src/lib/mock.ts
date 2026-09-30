@@ -1,7 +1,12 @@
 // Mock-Modus: simuliert das Tauri-Backend im Browser (npm run dev).
 // Szenario per URL wählbar: ?mock=bereit | leer | einrichtung | qemu | vm | neustart
 // Fehler erzwingen: ?fail=start (bzw. create, snapshot, …)
-import type { AppError, BackendKind, CreateProgress, CreateSpec, HostInfo, Settings, Snapshot, Vm, VmStatus } from "./types";
+import type { AppError, BackendKind, CreateProgress, CreateSpec, HostInfo, HyperVCandidate, Settings, Snapshot, Vm, VmStatus } from "./types";
+
+const hypervCandidates: HyperVCandidate[] = [
+  { id: "6f1c2a10-0001", name: "Server 2025 Test", state: "Off", cpus: 4, memoryMb: 8192, diskGb: 127, diskPath: "C:\ProgramData\Microsoft\Windows\Virtual Hard Disks\Server 2025 Test.vhdx", path: "C:\ProgramData\Microsoft\Windows\Hyper-V", windows: true, created: "2026-06-12T09:30:00Z" },
+  { id: "6f1c2a10-0002", name: "Debian Homelab", state: "Running", cpus: 2, memoryMb: 4096, diskGb: 40, diskPath: "D:\Hyper-V\Debian Homelab.vhdx", path: "D:\Hyper-V", windows: false, created: "2026-08-01T17:05:00Z" },
+];
 
 const params = new URLSearchParams(typeof location !== "undefined" ? location.search : "");
 const scenario = params.get("mock") ?? "bereit";
@@ -40,6 +45,12 @@ const baseHost: HostInfo = {
   qemuReady: false,
   activeBackend: "virtualbox",
   backendChoice: "auto",
+  hypervFeature: "unavailable",
+  hypervModule: false,
+  vmmsRunning: false,
+  hypervGroupOk: false,
+  hypervGroupNeedsRelogin: false,
+  hypervReady: false,
 };
 
 let host: HostInfo = { ...baseHost };
@@ -66,6 +77,11 @@ if (scenario === "einrichtung") {
     logicalCores: 6,
     totalMemoryMb: 14932,
   };
+} else if (scenario === "hyperv") {
+  // Windows Pro mit Hyper-V und vorhandenen VMs aus dem Hyper-V-Manager
+  host = { ...host, windowsName: "Windows 11 Pro", editionId: "Professional", isHome: false, windowsHypervisorRunning: true, hypervFeature: "enabled", hypervModule: true, vmmsRunning: true, hypervGroupOk: true, hypervReady: true };
+} else if (scenario === "hyperv-einrichtung") {
+  host = { ...host, windowsName: "Windows 11 Pro", editionId: "Professional", isHome: false, hypervFeature: "disabled" };
 } else if (scenario === "neustart") {
   host = { ...host, vboxPath: null, vboxVersion: null, vboxReady: false, qemuPath: QEMU, qemuFirmware: true, qemuReady: false, rebootPending: true, activeBackend: "qemu" };
 }
@@ -162,6 +178,24 @@ export async function mockCall<T>(cmd: string, args: Record<string, unknown> = {
     case "get_host_info":
       await wait(700);
       return { ...host, backendChoice: settings.backend } as T;
+    case "fix_enable_hyperv":
+      await wait(1400);
+      host = { ...host, rebootPending: true };
+      return undefined as T;
+    case "fix_hyperv_group":
+      await wait(900);
+      host = { ...host, hypervGroupNeedsRelogin: true };
+      return undefined as T;
+    case "list_hyperv_import":
+      await wait(700);
+      return hypervCandidates.filter((c) => !vms.some((v) => v.hypervId === c.id)) as T;
+    case "import_hyperv": {
+      const list = args.candidates as HyperVCandidate[];
+      for (const c of list) {
+        vms.push(vm({ id: `hv-${c.id}`, name: c.name, osId: "custom", osFamily: c.windows ? "windows" : "linux", backend: "hyperv", hypervId: c.id, imported: true, cpus: c.cpus, memoryMb: c.memoryMb, diskGb: c.diskGb }, "off"));
+      }
+      return list.length as T;
+    }
     case "install_software":
       await wait(2500);
       if (args.kind === "virtualbox") host = { ...host, vboxPath: VBOX, vboxVersion: "7.1.4r165100", vboxReady: host.virtualizationEnabled, activeBackend: "virtualbox" };

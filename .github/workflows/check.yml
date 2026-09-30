@@ -1,0 +1,47 @@
+# Prüft bei jedem Push, ob Oberfläche (TypeScript) und Backend (Rust) fehlerfrei kompilieren.
+# Läuft auf GitHub, damit lokal kein mehrere GB großer Rust-Build nötig ist.
+name: Prüfen
+
+on:
+  push:
+    branches: ["main"]
+    paths-ignore: ["**/*.md", "docs/**", "fortschritt/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Oberfläche prüfen (TypeScript)
+        run: npx tsc -b
+
+      - name: Oberfläche bauen
+        run: npx vite build
+
+      - name: Backend prüfen (Rust)
+        working-directory: src-tauri
+        run: cargo check --all-targets

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, FileText, FolderOpen, History, MonitorPlay, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { AlertTriangle, FileText, FolderOpen, History, Import, MonitorPlay, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { api, pickFolder, revealPath } from "../lib/api";
 import { formatMemory, limitsFor } from "../lib/presets";
-import type { AppError, BackendChoice, HostInfo, Settings, Snapshot, Vm } from "../lib/types";
+import { BACKEND_LABEL, type AppError, type BackendChoice, type HostInfo, type HyperVCandidate, type Settings, type Snapshot, type Vm } from "../lib/types";
+import { OsLogo } from "../lib/os";
 import { Button, Checkbox, Dialog, Info, Segmented, Slider, Spinner, TextInput, cx } from "../components/ui";
 import { ErrorPanel, useToast } from "../components/feedback";
 import { NestboxLogo } from "../components/Logo";
@@ -378,7 +379,7 @@ export function VmSettingsDialog({ vm, host, onClose, onDone }: { vm: Vm; host: 
         />
       </div>
       <div className="mt-5 space-y-1 rounded-xl bg-bg-subtle p-3.5 text-[12.5px] text-text-2">
-        <Row k="Technik" v={vm.backend === "virtualbox" ? "VirtualBox" : "QEMU"} />
+        <Row k="Technik" v={BACKEND_LABEL[vm.backend] + (vm.imported ? " (aus dem Hyper-V-Manager übernommen)" : "")} />
         <Row k="Installationsmedium" v={vm.isoPath ? vm.isoPath.split("\\").pop()! : "keines"} />
         <Row
           k="Dateien"
@@ -415,12 +416,14 @@ export function AppSettingsDialog({
   onClose,
   onSave,
   onOpenSetup,
+  onImportHyperv,
 }: {
   settings: Settings;
   host: HostInfo;
   onClose: () => void;
   onSave: (s: Settings) => Promise<void>;
   onOpenSetup: () => void;
+  onImportHyperv: () => void;
 }) {
   const [draft, setDraft] = useState(settings);
   const [busy, setBusy] = useState(false);
@@ -493,6 +496,7 @@ export function AppSettingsDialog({
             { value: "auto", label: "Automatisch" },
             { value: "virtualbox", label: "VirtualBox" },
             { value: "qemu", label: "QEMU" },
+            ...(host.isHome ? [] : [{ value: "hyperv" as const, label: "Hyper-V" }]),
           ]}
         />
       </Section>
@@ -516,6 +520,24 @@ export function AppSettingsDialog({
         </Section>
       )}
 
+      {!host.isHome && (
+        <Section
+          title="Hyper-V"
+          sub={host.hypervReady ? "VMs aus dem Hyper-V-Manager kannst du in Nestbox übernehmen und hier bequem steuern." : "Hyper-V ist auf diesem PC noch nicht bereit – richte es unter „Einrichtung erneut prüfen“ ein."}
+        >
+          <Button
+            icon={<Import className="size-4" />}
+            disabled={!host.hypervReady}
+            onClick={() => {
+              onClose();
+              onImportHyperv();
+            }}
+          >
+            Vorhandene Hyper-V-VMs übernehmen
+          </Button>
+        </Section>
+      )}
+
       <Section title="Fehlersuche" sub="Die Log-Datei enthält alle Befehle, die Nestbox ausgeführt hat.">
         <div className="flex flex-wrap gap-2">
           <Button icon={<FileText className="size-4" />} onClick={() => revealPath(logPath)} disabled={!logPath}>
@@ -535,7 +557,7 @@ export function AppSettingsDialog({
 
       <div className="mb-2 mt-6 flex items-center gap-3 border-t border-line pt-5 text-[12.5px] text-muted">
         <NestboxLogo size={22} />
-        Nestbox 0.9 · {host.windowsName} · {host.activeBackend === "virtualbox" ? "VirtualBox" : "QEMU"}
+        Nestbox 0.9 · {host.windowsName} · {BACKEND_LABEL[host.activeBackend]}
       </div>
       {error && <ErrorPanel error={error} />}
     </Dialog>
@@ -624,5 +646,102 @@ function CopyCode({ text }: { text: string }) {
         {copied ? "Kopiert" : "Kopieren"}
       </Button>
     </span>
+  );
+}
+
+// ── Vorhandene Hyper-V-VMs übernehmen ──
+
+export function ImportHypervDialog({ onClose, onDone }: { onClose: () => void; onDone: (count: number) => void }) {
+  const [list, setList] = useState<HyperVCandidate[] | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [error, setError] = useState<AppError | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    api
+      .listHypervImport()
+      .then((l) => {
+        setList(l);
+        setPicked(new Set(l.map((c) => c.id)));
+      })
+      .catch((e) => {
+        setError(e as AppError);
+        setList([]);
+      });
+  }, []);
+
+  const toggle = (id: string) =>
+    setPicked((p) => {
+      const n = new Set(p);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+
+  const go = async () => {
+    if (!list) return;
+    setBusy(true);
+    setError(null);
+    try {
+      onDone(await api.importHyperv(list.filter((c) => picked.has(c.id))));
+    } catch (e) {
+      setError(e as AppError);
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open
+      onClose={() => !busy && onClose()}
+      width={560}
+      title="Hyper-V-VMs übernehmen"
+      description="Diese VMs gibt es schon im Hyper-V-Manager. Nach dem Übernehmen steuerst du sie bequem über Nestbox – die VMs selbst bleiben dabei unverändert."
+      icon={
+        <span className="flex size-10 items-center justify-center rounded-full bg-accent-soft">
+          <Import className="size-5 text-accent-text" />
+        </span>
+      }
+      footer={
+        <>
+          <Button variant="ghost" disabled={busy} onClick={onClose}>
+            Abbrechen
+          </Button>
+          <Button variant="primary" loading={busy} disabled={!list || picked.size === 0} onClick={go}>
+            {picked.size === 1 ? "1 VM übernehmen" : `${picked.size} VMs übernehmen`}
+          </Button>
+        </>
+      }
+    >
+      {list === null ? (
+        <div className="flex justify-center py-8">
+          <Spinner className="size-5" />
+        </div>
+      ) : list.length === 0 && !error ? (
+        <div className="rounded-xl border border-dashed border-line-strong px-4 py-8 text-center text-[13.5px] text-muted">
+          Alle Hyper-V-VMs sind schon in Nestbox.
+        </div>
+      ) : (
+        <ul className="overflow-hidden rounded-xl border border-line">
+          {list.map((c, i) => (
+            <li key={c.id} className={cx("flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2", i > 0 && "border-t border-line")}>
+              <input type="checkbox" checked={picked.has(c.id)} onChange={() => toggle(c.id)} className="size-4 accent-[var(--accent)]" />
+              <OsLogo osId="custom" family={c.windows ? "windows" : "linux"} size={32} />
+              <div className="min-w-0 flex-1" onClick={() => toggle(c.id)}>
+                <div className="truncate font-medium">{c.name}</div>
+                <div className="truncate text-[12.5px] text-muted">
+                  {c.cpus} {c.cpus === 1 ? "Kern" : "Kerne"} · {formatMemory(c.memoryMb)} RAM{c.diskGb ? ` · ${c.diskGb} GB` : ""} · {c.state === "Running" ? "läuft gerade" : "aus"}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {error && (
+        <div className="mt-3">
+          <ErrorPanel error={error} />
+        </div>
+      )}
+    </Dialog>
   );
 }

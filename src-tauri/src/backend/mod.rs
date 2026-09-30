@@ -1,6 +1,7 @@
 //! Gemeinsame Schnittstelle für alle Virtualisierungs-Backends (VirtualBox, QEMU)
 //! und Hilfsfunktionen, die beide nutzen.
 
+pub mod hyperv;
 pub mod qemu;
 pub mod qmp;
 pub mod vbox;
@@ -106,6 +107,10 @@ pub trait VmBackend: Send + Sync {
     /// Treiber-CD für flüssige Grafik, Ton und Zwischenablage in die VM einlegen
     fn install_guest_tools(&self, vm: &VmRecord) -> AppResult<()>;
     fn delete(&self, vm: &VmRecord, delete_disk: bool) -> AppResult<()>;
+    /// Sicherungspunkte direkt aus dem Backend (Hyper-V). None = Nestbox-Liste verwenden.
+    fn native_snapshots(&self, _vm: &VmRecord) -> AppResult<Option<Vec<Snapshot>>> {
+        Ok(None)
+    }
     /// Liefert die Metadaten des neuen Sicherungspunkts (Nestbox speichert sie in der VM-Liste)
     fn create_snapshot(&self, vm: &VmRecord, name: &str) -> AppResult<Snapshot>;
     fn restore_snapshot(&self, vm: &VmRecord, snapshot_id: &str) -> AppResult<()>;
@@ -218,6 +223,14 @@ pub fn bring_to_front(image: &str, marker: &str) -> AppResult<bool> {
 /// Löscht die Dateien einer VM. Der ganze Ordner wird nur entfernt, wenn er
 /// eindeutig zu dieser VM gehört (von Nestbox angelegt, enthält die Festplatte).
 pub fn remove_vm_files(vm: &VmRecord) -> AppResult<()> {
+    if vm.imported {
+        // Übernommene VMs: Nestbox kennt deren Ordnerstruktur nicht – nur die Festplatte selbst löschen.
+        let disk = PathBuf::from(&vm.disk_path);
+        if disk.is_file() {
+            fs::remove_file(&disk)?;
+        }
+        return Ok(());
+    }
     let dir = PathBuf::from(&vm.dir);
     let disk = PathBuf::from(&vm.disk_path);
     let owns_dir = !vm.dir.is_empty() && disk.starts_with(&dir) && dir.components().count() >= 3;

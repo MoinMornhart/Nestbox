@@ -323,6 +323,8 @@ impl VmBackend for QemuBackend {
             disk_path: disk.to_string_lossy().to_string(),
             created: chrono::Utc::now(),
             vbox_id: None,
+            hyperv_id: None,
+            imported: false,
             qmp_port: Some(qmp::free_port()),
             snapshots: vec![],
         })

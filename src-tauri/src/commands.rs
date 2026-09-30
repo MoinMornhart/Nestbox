@@ -7,6 +7,7 @@ use serde::Serialize;
 use tauri::ipc::Channel;
 use tauri::State;
 
+use crate::backend::hyperv::{HyperVBackend, HyperVCandidate};
 use crate::backend::qemu::QemuBackend;
 use crate::backend::vbox::VBoxBackend;
 use crate::backend::{self as backend, qmp, CreateProgress, CreateSpec, PowerState, Snapshot, VmBackend, VmChanges, VmStatus};
@@ -59,6 +60,7 @@ fn save_record(st: &AppState, vm: VmRecord) -> AppResult<()> {
 fn backend_for(kind: BackendKind, settings: &Settings) -> AppResult<Box<dyn VmBackend>> {
     Ok(match kind {
         BackendKind::Virtualbox => Box::new(VBoxBackend::from_settings(settings)?),
+        BackendKind::Hyperv => Box::new(HyperVBackend),
         BackendKind::Qemu => Box::new(QemuBackend::from_settings(settings)?),
     })
 }
@@ -105,6 +107,58 @@ pub async fn get_host_info(state: Shared<'_>) -> AppResult<HostInfo> {
 #[tauri::command]
 pub async fn install_software(state: Shared<'_>, kind: BackendKind) -> AppResult<()> {
     blocking(&state, move |_| host::install_software(kind)).await
+}
+
+/// Fügt den Benutzer der Gruppe „Hyper-V-Administratoren“ hinzu (UAC).
+#[tauri::command]
+pub async fn fix_hyperv_group(state: Shared<'_>) -> AppResult<()> {
+    blocking(&state, |_| host::add_to_hyperv_group()).await
+}
+
+/// Schaltet Hyper-V ein (UAC, danach Neustart).
+#[tauri::command]
+pub async fn fix_enable_hyperv(state: Shared<'_>) -> AppResult<()> {
+    blocking(&state, move |st| {
+        let mut s = settings(&st);
+        host::enable_hyperv(&mut s)?;
+        let mut store = st.store.lock().unwrap_or_else(|e| e.into_inner());
+        store.settings.reboot_pending_since = s.reboot_pending_since;
+        store.save_settings()
+    })
+    .await
+}
+
+/// Hyper-V-VMs, die Nestbox noch nicht kennt (zum Übernehmen).
+#[tauri::command]
+pub async fn list_hyperv_import(state: Shared<'_>) -> AppResult<Vec<HyperVCandidate>> {
+    blocking(&state, |st| {
+        let known: Vec<String> = {
+            let store = st.store.lock().unwrap_or_else(|e| e.into_inner());
+            store.vms.iter().filter_map(|v| v.hyperv_id.clone()).collect()
+        };
+        HyperVBackend::list_unmanaged(&known)
+    })
+    .await
+}
+
+/// Übernimmt Hyper-V-VMs in Nestbox. Die VMs selbst bleiben unverändert.
+#[tauri::command]
+pub async fn import_hyperv(state: Shared<'_>, candidates: Vec<HyperVCandidate>) -> AppResult<usize> {
+    blocking(&state, move |st| {
+        let mut store = st.store.lock().unwrap_or_else(|e| e.into_inner());
+        let mut added = 0;
+        for c in &candidates {
+            if store.vms.iter().any(|v| v.hyperv_id.as_deref() == Some(c.id.as_str())) {
+                continue;
+            }
+            store.vms.push(HyperVBackend::to_record(c));
+            added += 1;
+        }
+        store.save_vms()?;
+        logger::info(&format!("{added} Hyper-V-VM(s) übernommen"));
+        Ok(added)
+    })
+    .await
 }
 
 /// Schaltet die Windows-Hypervisor-Plattform (für schnelles QEMU) ein.
@@ -177,7 +231,7 @@ fn collect_status(st: &AppState) -> Vec<VmStatus> {
         (store.vms.clone(), store.settings.clone())
     };
     let mut out = Vec::new();
-    for kind in [BackendKind::Virtualbox, BackendKind::Qemu] {
+    for kind in [BackendKind::Virtualbox, BackendKind::Qemu, BackendKind::Hyperv] {
         let group: Vec<VmRecord> = vms.iter().filter(|v| v.backend == kind).cloned().collect();
         if group.is_empty() {
             continue;
@@ -236,7 +290,9 @@ pub async fn check_vm_name(state: Shared<'_>, name: String, backend: BackendKind
         if store_has {
             return Ok(Some("Du hast schon eine VM mit diesem Namen.".into()));
         }
-        let _ = backend;
+        if backend == BackendKind::Hyperv && except_id.is_none() && HyperVBackend::name_exists(n).unwrap_or(false) {
+            return Ok(Some("In Hyper-V gibt es schon eine VM mit diesem Namen.".into()));
+        }
         if except_id.is_none() {
             let dir = std::path::Path::new(&settings(&st).vm_dir).join(crate::backend::safe_file_name(n));
             if dir.exists() && std::fs::read_dir(&dir).map(|mut d| d.next().is_some()).unwrap_or(false) {
@@ -416,7 +472,14 @@ pub async fn delete_vm(state: Shared<'_>, id: String, delete_disk: bool) -> AppR
 
 #[tauri::command]
 pub async fn list_snapshots(state: Shared<'_>, id: String) -> AppResult<Vec<Snapshot>> {
-    blocking(&state, move |st| Ok(backend::list_snapshots(&record(&st, &id)?))).await
+    blocking(&state, move |st| {
+        let vm = record(&st, &id)?;
+        match backend_for(vm.backend, &settings(&st))?.native_snapshots(&vm)? {
+            Some(list) => Ok(list),
+            None => Ok(backend::list_snapshots(&vm)),
+        }
+    })
+    .await
 }
 
 #[tauri::command]

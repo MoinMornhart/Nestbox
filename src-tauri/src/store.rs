@@ -27,6 +27,7 @@ pub fn default_vm_dir() -> PathBuf {
 pub enum BackendKind {
     Virtualbox,
     Qemu,
+    Hyperv,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -35,6 +36,7 @@ pub enum BackendChoice {
     Auto,
     Virtualbox,
     Qemu,
+    Hyperv,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -100,6 +102,12 @@ pub struct VmRecord {
     /// VirtualBox: UUID der VM
     #[serde(default)]
     pub vbox_id: Option<String>,
+    /// Hyper-V: VMId (GUID)
+    #[serde(default)]
+    pub hyperv_id: Option<String>,
+    /// Aus dem Hyper-V-Manager übernommen (nicht von Nestbox angelegt) – Dateien nie selbst löschen
+    #[serde(default)]
+    pub imported: bool,
     /// QEMU: Port für die QMP-Steuerung
     #[serde(default)]
     pub qmp_port: Option<u16>,

@@ -213,6 +213,8 @@ impl VmBackend for VBoxBackend {
             disk_path: disk.to_string_lossy().to_string(),
             created: chrono::Utc::now(),
             vbox_id: Some(uuid.clone()),
+            hyperv_id: None,
+            imported: false,
             qmp_port: None,
             snapshots: vec![],
         };

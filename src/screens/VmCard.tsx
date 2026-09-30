@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Disc3, History, MonitorPlay, Loader2, Monitor, MoreHorizontal, Pause, Pencil, Play, Power, PowerOff, Settings2, Trash2, Zap } from "lucide-react";
 import { OsLogo } from "../lib/os";
 import { formatMemory } from "../lib/presets";
-import type { PowerState, Vm } from "../lib/types";
+import { BACKEND_LABEL, type PowerState, type Vm } from "../lib/types";
 import { Button, cx, IconButton, Menu, Meter, type MenuItem } from "../components/ui";
 
 export type VmAction = "start" | "pause" | "resume" | "shutdown" | "poweroff" | "console" | "rename" | "settings" | "snapshots" | "eject" | "guesttools" | "delete";
@@ -88,6 +88,7 @@ export function VmCard({ vm, busy, onAction, index }: { vm: Vm; busy: string | n
           <div className="mt-0.5 flex items-center gap-2">
             <StatusPill state={st} busy={busy} />
             {on && !busy && <span className="truncate text-[12px] text-muted">· {uptime(vm.status.uptimeSeconds)}</span>}
+            {vm.backend === "hyperv" && !on && <span className="rounded-full bg-bg-subtle px-1.5 py-px text-[11px] font-medium text-muted">Hyper-V</span>}
           </div>
         </div>
         <IconButton
@@ -125,7 +126,7 @@ export function VmCard({ vm, busy, onAction, index }: { vm: Vm; busy: string | n
 
       <div className="mt-5 flex items-center gap-2 border-t border-line pt-4">
         {missing ? (
-          <span className="text-[12.5px] text-muted">In {vm.backend === "virtualbox" ? "VirtualBox" : "QEMU"} nicht mehr vorhanden</span>
+          <span className="text-[12.5px] text-muted">In {BACKEND_LABEL[vm.backend]} nicht mehr vorhanden</span>
         ) : off ? (
           <Button variant="primary" size="sm" icon={<Play className="size-3.5 fill-current" />} disabled={!!busy} onClick={() => onAction("start")}>
             Starten

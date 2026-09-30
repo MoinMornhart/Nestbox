@@ -39,7 +39,7 @@ export function Setup({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<AppError | null>(null);
   const [confirmRestart, setConfirmRestart] = useState(false);
-  const ready = host.vboxReady || host.qemuReady;
+  const ready = host.vboxReady || host.qemuReady || host.hypervReady;
 
   const run = async (id: string, fn: () => Promise<unknown>) => {
     setBusy(id);
@@ -57,7 +57,7 @@ export function Setup({
   const install = (kind: BackendKind, url: string) => (
     <div className="flex flex-wrap gap-2">
       {host.wingetAvailable && (
-        <Button size="sm" variant="primary" loading={busy === kind} disabled={!!busy && busy !== kind} icon={<Download className="size-3.5" />} onClick={() => run(kind, () => api.installSoftware(kind))}>
+        <Button size="sm" variant={kind === "qemu" && host.vboxReady ? "secondary" : "primary"} loading={busy === kind} disabled={!!busy && busy !== kind} icon={<Download className="size-3.5" />} onClick={() => run(kind, () => api.installSoftware(kind))}>
           {busy === kind ? "Wird installiert …" : "Jetzt installieren"}
         </Button>
       )}
@@ -173,7 +173,47 @@ export function Setup({
     ) : undefined,
   });
 
-  // 4. Beschleunigung für QEMU (nur relevant, wenn QEMU genutzt wird)
+  // 4. Hyper-V (optional, nur Windows Pro) – z. B. um VMs aus dem Hyper-V-Manager über Nestbox zu steuern
+  if (!host.isHome && host.hypervFeature !== "unavailable") {
+    const featureOn = host.hypervFeature === "enabled" && host.hypervModule;
+    checks.push({
+      id: "hyperv",
+      title: (
+        <span className="inline-flex items-center gap-2">
+          Hyper-V <span className="text-[12px] font-normal text-muted">optional, Windows Pro</span>
+        </span>
+      ),
+      state: host.hypervReady ? "ok" : "info",
+      text: host.hypervReady ? (
+        "Bereit – du kannst Hyper-V-VMs über Nestbox steuern und vorhandene aus dem Hyper-V-Manager übernehmen."
+      ) : !featureOn ? (
+        <>
+          Nicht nötig, aber möglich: Mit Hyper-V steuerst du auch VMs aus dem Hyper-V-Manager über Nestbox. Das Einschalten braucht einen Neustart.
+          <Info text="Hyper-V ist die eingebaute Virtualisierung von Windows Pro. Läuft Hyper-V, nutzt VirtualBox es mit – VirtualBox-VMs können dann etwas langsamer sein." />
+        </>
+      ) : !host.windowsHypervisorRunning ? (
+        "Hyper-V ist eingeschaltet, läuft aber noch nicht. Starte den PC neu (und prüfe die Virtualisierung oben)."
+      ) : host.hypervGroupNeedsRelogin ? (
+        "Fast geschafft: Melde dich einmal von Windows ab und wieder an, damit die neue Berechtigung gilt."
+      ) : (
+        <>
+          Damit Nestbox Hyper-V ohne ständige Admin-Abfragen steuern darf, brauchst du die Gruppe „Hyper-V-Administratoren“.
+          <Info text="Eine Windows-Benutzergruppe, deren Mitglieder Hyper-V verwenden dürfen, ohne volle Administratorrechte zu haben. Windows fragt dich einmal um Erlaubnis." />
+        </>
+      ),
+      action: host.hypervReady ? undefined : !featureOn ? (
+        <Button size="sm" loading={busy === "hyperv"} disabled={!!busy && busy !== "hyperv"} onClick={() => run("hyperv", api.enableHyperv)}>
+          Hyper-V aktivieren
+        </Button>
+      ) : host.windowsHypervisorRunning && !host.hypervGroupOk && !host.hypervGroupNeedsRelogin ? (
+        <Button size="sm" loading={busy === "group"} disabled={!!busy && busy !== "group"} onClick={() => run("group", api.fixHypervGroup)}>
+          Mich hinzufügen
+        </Button>
+      ) : undefined,
+    });
+  }
+
+  // 5. Beschleunigung für QEMU (nur relevant, wenn QEMU genutzt wird)
   if (host.qemuPath && host.virtualizationEnabled && host.activeBackend === "qemu") {
     checks.push({
       id: "whpx",
@@ -196,7 +236,7 @@ export function Setup({
     });
   }
 
-  const usable = host.vboxReady ? "VirtualBox" : host.qemuReady ? "QEMU" : null;
+  const usable = host.vboxReady ? "VirtualBox" : host.qemuReady ? "QEMU" : host.hypervReady ? "Hyper-V" : null;
 
   return (
     <div className="flex h-full overflow-y-auto">

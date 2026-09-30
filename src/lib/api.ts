@@ -2,6 +2,7 @@
 // antwortet stattdessen ein Mock mit Beispieldaten – für Entwicklung und Vorschaubilder.
 import type {
   AppError,
+  HyperVCandidate,
   BackendKind,
   CreateProgress,
   CreateSpec,
@@ -42,6 +43,10 @@ export const api = {
   hostInfo: () => call<HostInfo>("get_host_info"),
   installSoftware: (kind: BackendKind) => call<void>("install_software", { kind }),
   enableWhpx: () => call<void>("fix_enable_whpx"),
+  enableHyperv: () => call<void>("fix_enable_hyperv"),
+  fixHypervGroup: () => call<void>("fix_hyperv_group"),
+  listHypervImport: () => call<HyperVCandidate[]>("list_hyperv_import"),
+  importHyperv: (candidates: HyperVCandidate[]) => call<number>("import_hyperv", { candidates }),
   restartComputer: () => call<void>("restart_computer"),
 
   getSettings: () => call<Settings>("get_settings"),

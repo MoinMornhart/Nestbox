@@ -30,6 +30,11 @@ struct RawHost {
     last_boot: String,
     #[serde(default)]
     warnings: Vec<String>,
+    hyperv_feature: String,
+    hyperv_module: bool,
+    vmms_running: bool,
+    in_group_token: bool,
+    in_group_member: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -66,6 +71,16 @@ pub struct HostInfo {
     pub qemu_ready: bool,
     pub active_backend: BackendKind,
     pub backend_choice: BackendChoice,
+    // ── Hyper-V (optional, nur Windows Pro/Enterprise/Education) ──
+    /// enabled | disabled | unavailable
+    pub hyperv_feature: String,
+    pub hyperv_module: bool,
+    pub vmms_running: bool,
+    /// Mitglied in „Hyper-V-Administratoren“ und in der aktuellen Anmeldung wirksam
+    pub hyperv_group_ok: bool,
+    /// Mitglied, aber erst nach Ab-/Anmelden wirksam
+    pub hyperv_group_needs_relogin: bool,
+    pub hyperv_ready: bool,
 }
 
 const DETECT: &str = r#"
@@ -108,6 +123,10 @@ $vmx = if ($virtKnown) { [bool]($cpu | Where-Object { $_.VMMonitorModeExtensions
 $free = Try-Get { [System.IO.DriveInfo]::new(__DRIVE__).AvailableFreeSpace } 0 'Speicherplatz'
 $winHv = Try-Get { @(Get-CimInstance Win32_PerfRawData_HvStats_HyperVHypervisor -ErrorAction Stop).Count -gt 0 } $false 'Hypervisor'
 # Startzeit ohne WMI: Der Hochleistungszähler läuft seit dem Hochfahren.
+$me = [Security.Principal.WindowsIdentity]::GetCurrent()
+$inToken = @($me.Groups | Where-Object { $_.Value -eq 'S-1-5-32-578' }).Count -gt 0
+$isMember = $inToken -or [bool](Try-Get { @(Get-LocalGroupMember -SID 'S-1-5-32-578' -ErrorAction Stop | Where-Object { $_.SID.Value -eq $me.User.Value }).Count -gt 0 } $false 'Hyper-V-Gruppe')
+$vmms = Get-Service -Name vmms -ErrorAction SilentlyContinue
 $boot = if ($os) { $os.LastBootUpTime } else { (Get-Date).AddSeconds(-[System.Diagnostics.Stopwatch]::GetTimestamp() / [System.Diagnostics.Stopwatch]::Frequency) }
 [pscustomobject]@{
   caption = $caption
@@ -123,6 +142,11 @@ $boot = if ($os) { $os.LastBootUpTime } else { (Get-Date).AddSeconds(-[System.Di
   cpuName = $cpuName
   freeDiskGb = [math]::Round($free / 1GB, 1)
   lastBoot = $boot.ToUniversalTime().ToString('o')
+  hypervFeature = Get-FeatureState 'Microsoft-Hyper-V'
+  hypervModule = [bool](Get-Module -ListAvailable -Name Hyper-V)
+  vmmsRunning = ($null -ne $vmms -and $vmms.Status -eq 'Running')
+  inGroupToken = $inToken
+  inGroupMember = [bool]$isMember
   warnings = @($warn)
 } | ConvertTo-Json -Compress
 "#;
@@ -206,9 +230,20 @@ fn build_info(raw: RawHost, settings: &mut Settings) -> HostInfo {
     // QEMU läuft notfalls auch ohne Beschleunigung (dann langsam).
     let qemu_ready = qemu.is_some() && qemu_firmware && !reboot_pending;
 
+    let is_home = raw.edition_id.to_lowercase().starts_with("core");
+    let hyperv_group_ok = raw.in_group_token || elevate::is_elevated();
+    let hyperv_ready = !is_home
+        && raw.hyperv_feature == "enabled"
+        && raw.hyperv_module
+        && raw.vmms_running
+        && hyperv_group_ok
+        && raw.windows_hypervisor
+        && !reboot_pending;
+
     let active_backend = match settings.backend {
         BackendChoice::Virtualbox => BackendKind::Virtualbox,
         BackendChoice::Qemu => BackendKind::Qemu,
+        BackendChoice::Hyperv => BackendKind::Hyperv,
         BackendChoice::Auto => {
             if vbox_ready {
                 BackendKind::Virtualbox
@@ -224,7 +259,7 @@ fn build_info(raw: RawHost, settings: &mut Settings) -> HostInfo {
 
     HostInfo {
         windows_name: raw.caption.replace("Microsoft ", ""),
-        is_home: raw.edition_id.to_lowercase().starts_with("core"),
+        is_home,
         edition_id: raw.edition_id,
         build: raw.build,
         whpx_feature: raw.whpx_feature,
@@ -248,6 +283,12 @@ fn build_info(raw: RawHost, settings: &mut Settings) -> HostInfo {
         qemu_ready,
         active_backend,
         backend_choice: settings.backend,
+        hyperv_feature: if is_home { "unavailable".into() } else { raw.hyperv_feature },
+        hyperv_module: raw.hyperv_module,
+        vmms_running: raw.vmms_running,
+        hyperv_group_ok,
+        hyperv_group_needs_relogin: raw.in_group_member && !raw.in_group_token,
+        hyperv_ready,
     }
 }
 
@@ -256,6 +297,12 @@ pub fn install_software(kind: BackendKind) -> AppResult<()> {
     let (id, label) = match kind {
         BackendKind::Virtualbox => ("Oracle.VirtualBox", "VirtualBox"),
         BackendKind::Qemu => ("SoftwareFreedomConservancy.QEMU", "QEMU"),
+        BackendKind::Hyperv => {
+            return Err(AppError::new(
+                "Hyper-V lässt sich nicht herunterladen",
+                "Hyper-V ist Teil von Windows Pro. Schalte es unter „Einrichtung“ mit „Hyper-V aktivieren“ ein.",
+            ))
+        }
     };
     // „--source winget“: nur die normale winget-Quelle. Sonst fragt winget auch den Microsoft
     // Store – schlägt der fehl (z. B. Zertifikatsfehler), bricht die ganze Installation ab.
@@ -297,11 +344,37 @@ pub fn install_software(kind: BackendKind) -> AppResult<()> {
 
 /// Aktiviert die Windows-Hypervisor-Plattform per DISM (UAC). Danach ist ein Neustart nötig.
 pub fn enable_whpx(settings: &mut Settings) -> AppResult<()> {
-    let script = "$p = Start-Process -FilePath dism.exe -ArgumentList '/online','/Enable-Feature','/FeatureName:HypervisorPlatform','/All','/NoRestart','/Quiet' -Wait -PassThru -WindowStyle Hidden\r\n\
-         if ($p.ExitCode -ne 0 -and $p.ExitCode -ne 3010) { throw ('DISM ist mit Code ' + $p.ExitCode + ' fehlgeschlagen.') }\r\n\
-         'ok'";
-    elevate::run_ps("Windows-Hypervisor-Plattform aktivieren", script)?;
+    enable_feature("HypervisorPlatform", "Windows-Hypervisor-Plattform aktivieren", settings)
+}
+
+/// Aktiviert Hyper-V samt Verwaltungswerkzeugen per DISM (UAC). Danach ist ein Neustart nötig.
+pub fn enable_hyperv(settings: &mut Settings) -> AppResult<()> {
+    enable_feature("Microsoft-Hyper-V", "Hyper-V aktivieren", settings)
+}
+
+fn enable_feature(feature: &str, label: &str, settings: &mut Settings) -> AppResult<()> {
+    let script = format!(
+        "$p = Start-Process -FilePath dism.exe -ArgumentList '/online','/Enable-Feature','/FeatureName:{feature}','/All','/NoRestart','/Quiet' -Wait -PassThru -WindowStyle Hidden\r\n\
+         if ($p.ExitCode -ne 0 -and $p.ExitCode -ne 3010) {{ throw ('DISM ist mit Code ' + $p.ExitCode + ' fehlgeschlagen.') }}\r\n\
+         'ok'"
+    );
+    elevate::run_ps(label, &script)?;
     settings.reboot_pending_since = Some(chrono::Utc::now());
+    Ok(())
+}
+
+/// Fügt den aktuellen Benutzer der Gruppe „Hyper-V-Administratoren“ hinzu (UAC).
+/// Die Gruppe wird über ihre SID angesprochen, damit es auf jeder Sprachversion klappt.
+pub fn add_to_hyperv_group() -> AppResult<()> {
+    let sid = ps::run("Benutzerkonto ermitteln", "[Security.Principal.WindowsIdentity]::GetCurrent().User.Value")?;
+    let script = format!(
+        "$sid = {sid}\r\n\
+         $already = @(Get-LocalGroupMember -SID 'S-1-5-32-578' | Where-Object {{ $_.SID.Value -eq $sid }}).Count -gt 0\r\n\
+         if (-not $already) {{ Add-LocalGroupMember -SID 'S-1-5-32-578' -Member $sid }}\r\n\
+         'ok'",
+        sid = ps::quote(sid.trim())
+    );
+    elevate::run_ps("Zur Gruppe „Hyper-V-Administratoren“ hinzufügen", &script)?;
     Ok(())
 }
 
