@@ -40,6 +40,10 @@
   "now": "Warte auf deinen Test von 0.9.2 (VirtualBox-Installation)",
   "files": [
     {
+      "path": "src-tauri/Cargo.lock",
+      "t": "2026-09-30T11:35:37.792Z"
+    },
+    {
       "path": "src/vite-env.d.ts",
       "t": "2026-09-30T11:28:19.316Z"
     },
@@ -94,13 +98,17 @@
     {
       "path": "src/screens/dialogs.tsx",
       "t": "2026-09-29T11:14:11.838Z"
-    },
-    {
-      "path": "src-tauri/src/backend/qemu.rs",
-      "t": "2026-09-29T11:14:11.838Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-09-30T11:35:37.792Z",
+      "text": "Rust-Build-Zwischenspeicher gelöscht (C: war voll) – 2,5 GB frei"
+    },
+    {
+      "t": "2026-09-30T11:35:37.791Z",
+      "text": "GitHub-Build 0.9.3 scheiterte: Tauri-Opener-Plugin war in JavaScript 2.7, in Rust noch 2.6 – angeglichen"
+    },
     {
       "t": "2026-09-30T11:28:19.315Z",
       "text": "Version 0.9.3 wird gebaut"
@@ -867,8 +875,6 @@
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-09-30T11:28:19.356Z",
-  "icloudConflicts": [
-    ".git/index 2"
-  ]
+  "updated": "2026-09-30T11:35:37.814Z",
+  "icloudConflicts": []
 }
