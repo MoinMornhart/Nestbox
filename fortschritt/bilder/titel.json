@@ -97,22 +97,22 @@
   "dialog-umbenennen": {
     "title": "Umbenennen",
     "group": "Overlays",
-    "order": 24
+    "order": 26
   },
   "dialog-vm-einstellungen": {
     "title": "VM-Einstellungen",
     "group": "Overlays",
-    "order": 26
+    "order": 28
   },
   "fehler-toast": {
     "title": "Fehlermeldung mit Lösungsvorschlag",
     "group": "Overlays",
-    "order": 27
+    "order": 29
   },
   "tooltip": {
     "title": "Tooltip für Fachbegriffe",
     "group": "Overlays",
-    "order": 28
+    "order": 30
   },
   "einrichtung-vm": {
     "title": "Einrichtung – Windows läuft selbst in einer VM",
@@ -132,7 +132,7 @@
   "dialog-gasterweiterungen": {
     "title": "Gasterweiterungen – flüssiges Bild",
     "group": "Overlays",
-    "order": 25
+    "order": 27
   },
   "einrichtung-hyperv": {
     "title": "Einrichtung – Hyper-V optional (Windows Pro)",
@@ -143,5 +143,15 @@
     "title": "Hyper-V-VMs übernehmen",
     "group": "Overlays",
     "order": 23
+  },
+  "update-verfuegbar": {
+    "title": "Update verfügbar (Hinweis oben rechts)",
+    "group": "Overlays",
+    "order": 24
+  },
+  "dialog-update": {
+    "title": "Update installieren",
+    "group": "Overlays",
+    "order": 25
   }
 }

@@ -40,6 +40,26 @@
   "now": "Hyper-V kommt als zusätzliche Option zurück (für Windows Pro) – inkl. Übernahme vorhandener Hyper-V-VMs",
   "files": [
     {
+      "path": "README.md",
+      "t": "2026-09-30T13:43:52.543Z"
+    },
+    {
+      "path": "src-tauri/tauri.conf.json",
+      "t": "2026-09-30T13:43:52.543Z"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "t": "2026-09-30T13:43:52.543Z"
+    },
+    {
+      "path": "src/components/Updater.tsx",
+      "t": "2026-09-30T13:43:52.543Z"
+    },
+    {
+      "path": "src/lib/updater.ts",
+      "t": "2026-09-30T13:43:52.543Z"
+    },
+    {
       "path": ".github/workflows/check.yml",
       "t": "2026-09-30T13:29:06.710Z"
     },
@@ -78,29 +98,21 @@
     {
       "path": "package.json",
       "t": "2026-09-30T11:28:19.316Z"
-    },
-    {
-      "path": ".gitignore",
-      "t": "2026-09-29T16:38:49.254Z"
-    },
-    {
-      "path": "docs/logo.svg",
-      "t": "2026-09-29T16:23:00.835Z"
-    },
-    {
-      "path": ".github/release-notes.md",
-      "t": "2026-09-29T16:23:00.835Z"
-    },
-    {
-      "path": ".github/workflows/release.yml",
-      "t": "2026-09-29T16:23:00.835Z"
-    },
-    {
-      "path": "README.md",
-      "t": "2026-09-29T16:23:00.835Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-09-30T13:43:52.543Z",
+      "text": "Version 0.9.4 wird gebaut – ab dieser Version aktualisiert sich Nestbox selbst"
+    },
+    {
+      "t": "2026-09-30T13:43:52.543Z",
+      "text": "Update-Funktion: signierte Updates (Schlüssel als GitHub-Secret + Sicherung in iCloud), Hinweis „Update auf …“, Dialog mit Fortschritt, „Nach Updates suchen“ in den Einstellungen"
+    },
+    {
+      "t": "2026-09-30T13:43:52.542Z",
+      "text": "Repo öffentlich gemacht – Download ohne Login; E-Mail-Adresse vorher aus allen Commits entfernt"
+    },
     {
       "t": "2026-09-30T13:29:06.710Z",
       "text": "Neuer GitHub-Workflow „Prüfen“: kompiliert Rust und TypeScript bei jedem Push (lokal ist zu wenig Platz)"
@@ -667,7 +679,7 @@
       "group": "Bildschirme",
       "order": 14,
       "theme": "dunkel",
-      "t": "2026-09-29T10:57:50.361Z"
+      "t": "2026-09-30T13:42:40.618Z"
     },
     {
       "file": "einstellungen-hell.png",
@@ -676,7 +688,7 @@
       "group": "Bildschirme",
       "order": 14,
       "theme": "hell",
-      "t": "2026-09-29T10:57:47.779Z"
+      "t": "2026-09-30T13:42:37.903Z"
     },
     {
       "file": "erstellen-fortschritt-dunkel.png",
@@ -841,11 +853,47 @@
       "t": "2026-09-30T13:28:08.250Z"
     },
     {
+      "file": "update-verfuegbar-dunkel.png",
+      "base": "update-verfuegbar",
+      "title": "Update verfügbar (Hinweis oben rechts)",
+      "group": "Overlays",
+      "order": 24,
+      "theme": "dunkel",
+      "t": "2026-09-30T13:42:20.753Z"
+    },
+    {
+      "file": "update-verfuegbar-hell.png",
+      "base": "update-verfuegbar",
+      "title": "Update verfügbar (Hinweis oben rechts)",
+      "group": "Overlays",
+      "order": 24,
+      "theme": "hell",
+      "t": "2026-09-30T13:42:14.179Z"
+    },
+    {
+      "file": "dialog-update-dunkel.png",
+      "base": "dialog-update",
+      "title": "Update installieren",
+      "group": "Overlays",
+      "order": 25,
+      "theme": "dunkel",
+      "t": "2026-09-30T13:42:33.836Z"
+    },
+    {
+      "file": "dialog-update-hell.png",
+      "base": "dialog-update",
+      "title": "Update installieren",
+      "group": "Overlays",
+      "order": 25,
+      "theme": "hell",
+      "t": "2026-09-30T13:42:27.304Z"
+    },
+    {
       "file": "dialog-umbenennen-dunkel.png",
       "base": "dialog-umbenennen",
       "title": "Umbenennen",
       "group": "Overlays",
-      "order": 24,
+      "order": 26,
       "theme": "dunkel",
       "t": "2026-09-29T10:58:55.518Z"
     },
@@ -854,7 +902,7 @@
       "base": "dialog-umbenennen",
       "title": "Umbenennen",
       "group": "Overlays",
-      "order": 24,
+      "order": 26,
       "theme": "hell",
       "t": "2026-09-29T10:58:52.878Z"
     },
@@ -863,7 +911,7 @@
       "base": "dialog-gasterweiterungen",
       "title": "Gasterweiterungen – flüssiges Bild",
       "group": "Overlays",
-      "order": 25,
+      "order": 27,
       "theme": "dunkel",
       "t": "2026-09-29T11:13:27.931Z"
     },
@@ -872,7 +920,7 @@
       "base": "dialog-gasterweiterungen",
       "title": "Gasterweiterungen – flüssiges Bild",
       "group": "Overlays",
-      "order": 25,
+      "order": 27,
       "theme": "hell",
       "t": "2026-09-29T11:13:25.251Z"
     },
@@ -881,25 +929,25 @@
       "base": "dialog-vm-einstellungen",
       "title": "VM-Einstellungen",
       "group": "Overlays",
-      "order": 26,
+      "order": 28,
       "theme": "dunkel",
-      "t": "2026-09-29T10:59:00.663Z"
+      "t": "2026-09-30T13:42:45.997Z"
     },
     {
       "file": "dialog-vm-einstellungen-hell.png",
       "base": "dialog-vm-einstellungen",
       "title": "VM-Einstellungen",
       "group": "Overlays",
-      "order": 26,
+      "order": 28,
       "theme": "hell",
-      "t": "2026-09-29T10:58:58.086Z"
+      "t": "2026-09-30T13:42:43.284Z"
     },
     {
       "file": "fehler-toast-dunkel.png",
       "base": "fehler-toast",
       "title": "Fehlermeldung mit Lösungsvorschlag",
       "group": "Overlays",
-      "order": 27,
+      "order": 29,
       "theme": "dunkel",
       "t": "2026-09-29T10:59:08.030Z"
     },
@@ -908,7 +956,7 @@
       "base": "fehler-toast",
       "title": "Fehlermeldung mit Lösungsvorschlag",
       "group": "Overlays",
-      "order": 27,
+      "order": 29,
       "theme": "hell",
       "t": "2026-09-29T10:59:04.368Z"
     },
@@ -917,7 +965,7 @@
       "base": "tooltip",
       "title": "Tooltip für Fachbegriffe",
       "group": "Overlays",
-      "order": 28,
+      "order": 30,
       "theme": "dunkel",
       "t": "2026-09-29T10:59:14.645Z"
     },
@@ -926,11 +974,11 @@
       "base": "tooltip",
       "title": "Tooltip für Fachbegriffe",
       "group": "Overlays",
-      "order": 28,
+      "order": 30,
       "theme": "hell",
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-09-30T13:29:06.732Z",
+  "updated": "2026-09-30T13:43:52.594Z",
   "icloudConflicts": []
 }

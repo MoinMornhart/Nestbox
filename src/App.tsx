@@ -4,6 +4,7 @@ import type { AppError, HostInfo, Settings, Vm } from "./lib/types";
 import { Button } from "./components/ui";
 import { ErrorPanel, ToastProvider } from "./components/feedback";
 import { NestboxLogo } from "./components/Logo";
+import { useUpdates } from "./components/Updater";
 import { Setup } from "./screens/Setup";
 import { Dashboard, type OpenDialog } from "./screens/Dashboard";
 import { Wizard, type WizardInit } from "./screens/wizard/Wizard";
@@ -20,7 +21,7 @@ const wizardInit: WizardInit | undefined =
 const initialDialog: OpenDialog = (() => {
   const d = !inTauri ? params.get("dialog") : null;
   if (!d) return null;
-  if (d === "app-settings" || d === "hyperv-import") return { kind: d };
+  if (d === "app-settings" || d === "hyperv-import" || d === "update") return { kind: d };
   const [kind, id] = d.split(":");
   return { kind: kind as "snapshots", id };
 })();
@@ -35,6 +36,7 @@ export default function App() {
   const [checking, setChecking] = useState(false);
   const [vms, setVms] = useState<Vm[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const updates = useUpdates();
 
   const recheck = useCallback(async () => {
     setChecking(true);
@@ -161,6 +163,7 @@ export default function App() {
             setView("setup");
           }}
           initialDialog={initialDialog}
+          updates={updates}
         />
       )}
       {view === "wizard" && (

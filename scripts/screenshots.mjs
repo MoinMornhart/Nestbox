@@ -49,6 +49,8 @@ const SHOTS = [
     async (p) => { await p.getByRole("checkbox").check(); await p.waitForTimeout(300); }],
   ["dialog-ausschalten", "Bestätigung – Sofort ausschalten", "Overlays", "?view=dashboard&dialog=poweroff:a1"],
   ["dialog-hyperv-import", "Hyper-V-VMs übernehmen", "Overlays", "?mock=hyperv&view=dashboard&dialog=hyperv-import", async (p) => p.waitForTimeout(900)],
+  ["update-verfuegbar", "Update verfügbar (Hinweis oben rechts)", "Overlays", "?view=dashboard&update=1", async (p) => p.waitForTimeout(3800)],
+  ["dialog-update", "Update installieren", "Overlays", "?view=dashboard&update=1&dialog=update", async (p) => p.waitForTimeout(3800)],
   ["dialog-umbenennen", "Umbenennen", "Overlays", "?view=dashboard&dialog=rename:c3"],
   ["dialog-gasterweiterungen", "Gasterweiterungen – flüssiges Bild", "Overlays", "?view=dashboard&dialog=guesttools:a1"],
   ["dialog-vm-einstellungen", "VM-Einstellungen", "Overlays", "?view=dashboard&dialog=settings:c3"],

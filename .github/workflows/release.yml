@@ -37,16 +37,40 @@ jobs:
       - name: Abhängigkeiten installieren
         run: npm ci
 
-      - name: Installer bauen
+      - name: Installer bauen und signieren
         run: npm run tauri build
+        env:
+          # Signiert die Update-Pakete; ohne gültige Signatur installiert Nestbox kein Update.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
-      - name: Dateien mit festen Namen ablegen
+      - name: Dateien mit festen Namen ablegen und latest.json erzeugen
         shell: pwsh
         run: |
           $bundle = "src-tauri/target/release/bundle"
           New-Item -ItemType Directory -Force out | Out-Null
-          Copy-Item (Get-ChildItem "$bundle/nsis/*-setup.exe" | Select-Object -First 1).FullName out/Nestbox-Setup.exe
+          $setup = Get-ChildItem "$bundle/nsis/*-setup.exe" | Select-Object -First 1
+          Copy-Item $setup.FullName out/Nestbox-Setup.exe
           Copy-Item (Get-ChildItem "$bundle/msi/*.msi" | Select-Object -First 1).FullName out/Nestbox.msi
+
+          # latest.json: Hier schaut die installierte App nach, ob es ein Update gibt.
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $tag = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { "v$version" }
+          $signature = (Get-Content "$($setup.FullName).sig" -Raw).Trim()
+          $notes = (Get-Content .github/update-notes.md -Raw -Encoding UTF8).Trim()
+          $manifest = [ordered]@{
+            version   = $version
+            notes     = $notes
+            pub_date  = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+            platforms = [ordered]@{
+              'windows-x86_64' = [ordered]@{
+                signature = $signature
+                url       = "https://github.com/${{ github.repository }}/releases/download/$tag/Nestbox-Setup.exe"
+              }
+            }
+          }
+          $manifest | ConvertTo-Json -Depth 5 | Set-Content out/latest.json -Encoding utf8NoBOM
+          Get-Content out/latest.json
           Get-ChildItem out | Format-Table Name, Length
 
       - name: Release veröffentlichen
@@ -60,4 +84,4 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag --title "Nestbox $version (Vorschau)" --notes-file .github/release-notes.md --target $env:GITHUB_SHA
           }
-          gh release upload $tag out/Nestbox-Setup.exe out/Nestbox.msi --clobber
+          gh release upload $tag out/Nestbox-Setup.exe out/Nestbox.msi out/latest.json --clobber

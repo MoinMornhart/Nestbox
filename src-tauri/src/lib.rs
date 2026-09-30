@@ -33,6 +33,9 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        // Updates: signiert, von GitHub-Releases (latest.json)
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .manage(state)
         .invoke_handler(tauri::generate_handler![
             commands::get_host_info,

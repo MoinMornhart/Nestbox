@@ -6,9 +6,15 @@ import { Button, Dialog, IconButton, Tooltip } from "../components/ui";
 import { useToast } from "../components/feedback";
 import { EmptyNest, NestboxLogo } from "../components/Logo";
 import { VmCard, type VmAction } from "./VmCard";
+import { UpdateDialog, UpdatePill, type UpdateState } from "../components/Updater";
 import { AppSettingsDialog, DeleteDialog, GuestToolsDialog, ImportHypervDialog, RenameDialog, SnapshotsDialog, VmSettingsDialog } from "./dialogs";
 
-export type OpenDialog = { kind: "snapshots" | "rename" | "delete" | "settings" | "poweroff" | "guesttools"; id: string } | { kind: "app-settings" } | { kind: "hyperv-import" } | null;
+export type OpenDialog =
+  | { kind: "snapshots" | "rename" | "delete" | "settings" | "poweroff" | "guesttools"; id: string }
+  | { kind: "app-settings" }
+  | { kind: "hyperv-import" }
+  | { kind: "update" }
+  | null;
 
 const BUSY_LABEL: Partial<Record<VmAction, string>> = {
   start: "Startet …",
@@ -30,7 +36,9 @@ export function Dashboard({
   onSaveSettings,
   onOpenSetup,
   initialDialog = null,
+  updates,
 }: {
+  updates: UpdateState;
   host: HostInfo;
   settings: Settings;
   vms: Vm[];
@@ -107,6 +115,7 @@ export function Dashboard({
           <span className="ml-1 rounded-full bg-bg-subtle px-2.5 py-0.5 text-[12px] font-medium text-text-2">{BACKEND_LABEL[host.activeBackend]}</span>
         </Tooltip>
         <div className="flex-1" />
+        {updates.update && <UpdatePill update={updates.update} onClick={() => setDialog({ kind: "update" })} />}
         <IconButton label="Einstellungen" tooltipSide="bottom" onClick={() => setDialog({ kind: "app-settings" })}>
           <SettingsIcon className="size-[18px]" />
         </IconButton>
@@ -158,8 +167,9 @@ export function Dashboard({
         <VmSettingsDialog vm={dialogVm} host={host} onClose={() => setDialog(null)} onDone={() => closeAndRefresh("Einstellungen gespeichert")} />
       )}
       {dialog?.kind === "app-settings" && (
-        <AppSettingsDialog settings={settings} host={host} onClose={() => setDialog(null)} onSave={onSaveSettings} onOpenSetup={onOpenSetup} onImportHyperv={() => setDialog({ kind: "hyperv-import" })} />
+        <AppSettingsDialog settings={settings} host={host} onClose={() => setDialog(null)} onSave={onSaveSettings} onOpenSetup={onOpenSetup} onImportHyperv={() => setDialog({ kind: "hyperv-import" })} updates={updates} onOpenUpdate={() => setDialog({ kind: "update" })} />
       )}
+      {dialog?.kind === "update" && updates.update && <UpdateDialog update={updates.update} current={updates.version} onClose={() => setDialog(null)} />}
       {dialog?.kind === "hyperv-import" && (
         <ImportHypervDialog onClose={() => setDialog(null)} onDone={(n) => closeAndRefresh(n === 1 ? "1 Hyper-V-VM übernommen" : `${n} Hyper-V-VMs übernommen`)} />
       )}

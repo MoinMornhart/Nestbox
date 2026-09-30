@@ -51,6 +51,8 @@ Kein Vorwissen, keine Pro-Lizenz, keine Kommandozeile.
 | 🎬 **Flüssiges Bild** | 3D-Beschleunigung, Ton und Gasterweiterungen per Klick – für Videos und Streaming. |
 | 🕰️ **Sicherungspunkte** | Zustand speichern und jederzeit zurückspringen, z. B. vor einem Update. |
 | 🌗 **Hell & Dunkel** | Folgt automatisch deiner Windows-Einstellung. |
+| 🔄 **Updates per Klick** | Nestbox findet neue Versionen selbst und aktualisiert sich – signiert und geprüft. |
+| 🧩 **Hyper-V optional** | Mit Windows Pro steuerst du auch Hyper-V-VMs über Nestbox – vorhandene VMs aus dem Hyper-V-Manager übernimmst du per Klick. |
 
 ## So sieht es aus
 
@@ -109,6 +111,10 @@ Kein Vorwissen, keine Pro-Lizenz, keine Kommandozeile.
 
 **Mein Windows läuft selbst in einer VM (z. B. Proxmox).** Dann muss der Host die Virtualisierung durchreichen – in Proxmox beim Prozessor den Typ „host“ wählen. Nestbox erkennt das und zeigt die Schritte an.
 
+**Ich nutze schon Hyper-V.** Kein Problem: Unter „Einstellungen → Vorhandene Hyper-V-VMs übernehmen“ holst du deine VMs aus dem Hyper-V-Manager in Nestbox und steuerst sie dort. Die VMs selbst bleiben unverändert.
+
+**Wie bekomme ich Updates?** Nestbox sucht beim Start nach neuen Versionen und zeigt oben rechts „Update auf …“. Ein Klick genügt. Manuell: „Einstellungen → Nach Updates suchen“.
+
 **Wo liegen meine VMs?** Standardmäßig unter `%USERPROFILE%\Nestbox\VMs\` – in den Einstellungen änderbar.
 
 </details>
@@ -146,7 +152,9 @@ Der erste Start dauert einige Minuten, weil Rust alles einmal kompiliert.
 
 ### Release veröffentlichen
 
-Ein Tag wie `v0.9.0` pushen – der Workflow [„Installer bauen“](.github/workflows/release.yml) baut auf GitHub den Installer und hängt `Nestbox-Setup.exe` und `Nestbox.msi` ans Release. Der Link `…/releases/latest/download/Nestbox-Setup.exe` zeigt immer auf die neueste Version.
+Version in `package.json`, `src-tauri/tauri.conf.json` und `src-tauri/Cargo.toml` erhöhen, Änderungen in `.github/update-notes.md` eintragen und einen Tag wie `v0.9.4` pushen. Der Workflow [„Installer bauen“](.github/workflows/release.yml) baut den Installer, signiert ihn mit dem Secret `TAURI_SIGNING_PRIVATE_KEY` und hängt `Nestbox-Setup.exe`, `Nestbox.msi` und `latest.json` ans Release. Installierte Apps finden das Update über `…/releases/latest/download/latest.json`.
+
+Der Workflow [„Prüfen“](.github/workflows/check.yml) kompiliert bei jedem Push Rust und TypeScript.
 
 ### Oberfläche im Browser (Mock-Modus)
 

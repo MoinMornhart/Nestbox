@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, FileText, FolderOpen, History, Import, MonitorPlay, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { AlertTriangle, Check, FileText, FolderOpen, History, Import, MonitorPlay, Plus, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { api, pickFolder, revealPath } from "../lib/api";
 import { formatMemory, limitsFor } from "../lib/presets";
 import { BACKEND_LABEL, type AppError, type BackendChoice, type HostInfo, type HyperVCandidate, type Settings, type Snapshot, type Vm } from "../lib/types";
@@ -7,6 +7,7 @@ import { OsLogo } from "../lib/os";
 import { Button, Checkbox, Dialog, Info, Segmented, Slider, Spinner, TextInput, cx } from "../components/ui";
 import { ErrorPanel, useToast } from "../components/feedback";
 import { NestboxLogo } from "../components/Logo";
+import type { UpdateState } from "../components/Updater";
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -417,6 +418,8 @@ export function AppSettingsDialog({
   onSave,
   onOpenSetup,
   onImportHyperv,
+  updates,
+  onOpenUpdate,
 }: {
   settings: Settings;
   host: HostInfo;
@@ -424,6 +427,8 @@ export function AppSettingsDialog({
   onSave: (s: Settings) => Promise<void>;
   onOpenSetup: () => void;
   onImportHyperv: () => void;
+  updates: UpdateState;
+  onOpenUpdate: () => void;
 }) {
   const [draft, setDraft] = useState(settings);
   const [busy, setBusy] = useState(false);
@@ -538,6 +543,34 @@ export function AppSettingsDialog({
         </Section>
       )}
 
+      <Section title="Version & Updates" sub={`Du nutzt Nestbox ${updates.version || "…"}. Neue Versionen werden beim Start automatisch gesucht.`}>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            icon={<RefreshCw className={cx("size-4", updates.checking && "anim-spin")} />}
+            disabled={updates.checking}
+            onClick={async () => {
+              const u = await updates.check(true);
+              if (u) {
+                onClose();
+                onOpenUpdate();
+              }
+            }}
+          >
+            Nach Updates suchen
+          </Button>
+          {updates.lastResult === "none" && !updates.checking && (
+            <span className="inline-flex items-center gap-1.5 text-[13px] text-ok anim-fade">
+              <Check className="size-4" /> Du hast die neueste Version.
+            </span>
+          )}
+        </div>
+        {updates.error && (
+          <div className="mt-3">
+            <ErrorPanel error={updates.error} />
+          </div>
+        )}
+      </Section>
+
       <Section title="Fehlersuche" sub="Die Log-Datei enthält alle Befehle, die Nestbox ausgeführt hat.">
         <div className="flex flex-wrap gap-2">
           <Button icon={<FileText className="size-4" />} onClick={() => revealPath(logPath)} disabled={!logPath}>
@@ -557,7 +590,7 @@ export function AppSettingsDialog({
 
       <div className="mb-2 mt-6 flex items-center gap-3 border-t border-line pt-5 text-[12.5px] text-muted">
         <NestboxLogo size={22} />
-        Nestbox 0.9 · {host.windowsName} · {BACKEND_LABEL[host.activeBackend]}
+        Nestbox {updates.version} · {host.windowsName} · {BACKEND_LABEL[host.activeBackend]}
       </div>
       {error && <ErrorPanel error={error} />}
     </Dialog>
