@@ -37,8 +37,20 @@
       "state": "open"
     }
   ],
-  "now": "Warte auf deine Rückmeldung zum Test von 0.9.1",
+  "now": "Warte auf deinen Test von 0.9.2 (VirtualBox-Installation)",
   "files": [
+    {
+      "path": "src/vite-env.d.ts",
+      "t": "2026-09-30T11:28:19.316Z"
+    },
+    {
+      "path": "package-lock.json",
+      "t": "2026-09-30T11:28:19.316Z"
+    },
+    {
+      "path": "package.json",
+      "t": "2026-09-30T11:28:19.316Z"
+    },
     {
       "path": "src-tauri/src/host.rs",
       "t": "2026-09-30T09:09:34.750Z"
@@ -86,21 +98,25 @@
     {
       "path": "src-tauri/src/backend/qemu.rs",
       "t": "2026-09-29T11:14:11.838Z"
-    },
-    {
-      "path": "src-tauri/src/backend/vbox.rs",
-      "t": "2026-09-29T11:14:11.838Z"
-    },
-    {
-      "path": "src/screens/Setup.tsx",
-      "t": "2026-09-29T10:59:30.418Z"
-    },
-    {
-      "path": "src-tauri/src/backend/mod.rs",
-      "t": "2026-09-29T10:59:30.418Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-09-30T11:28:19.315Z",
+      "text": "Version 0.9.3 wird gebaut"
+    },
+    {
+      "t": "2026-09-30T11:28:19.315Z",
+      "text": "Issue #2: alle 13 Pakete aktualisiert (u. a. React 19.3, Tauri 2.12, TypeScript 7, lucide 1.49) – Typprüfung, Build und Oberfläche geprüft"
+    },
+    {
+      "t": "2026-09-30T11:28:19.314Z",
+      "text": "Issue #1: Sicherheitslücken in vite und playwright behoben (vite 8.3, playwright 1.63) – npm audit: 0 Lücken"
+    },
+    {
+      "t": "2026-09-30T09:23:24.130Z",
+      "text": "Installer 0.9.2 fertig und im Ordner Installer/ abgelegt"
+    },
     {
       "t": "2026-09-30T09:09:34.750Z",
       "text": "Version 0.9.2 wird gebaut"
@@ -389,7 +405,7 @@
       "group": "Bildschirme",
       "order": 1,
       "theme": "dunkel",
-      "t": "2026-09-29T10:56:48.428Z"
+      "t": "2026-09-30T11:27:21.303Z"
     },
     {
       "file": "einrichtung-hell.png",
@@ -398,7 +414,7 @@
       "group": "Bildschirme",
       "order": 1,
       "theme": "hell",
-      "t": "2026-09-29T10:56:45.893Z"
+      "t": "2026-09-30T11:27:18.639Z"
     },
     {
       "file": "einrichtung-bereit-dunkel.png",
@@ -407,7 +423,7 @@
       "group": "Bildschirme",
       "order": 2,
       "theme": "dunkel",
-      "t": "2026-09-29T10:56:53.465Z"
+      "t": "2026-09-30T11:27:26.650Z"
     },
     {
       "file": "einrichtung-bereit-hell.png",
@@ -416,7 +432,7 @@
       "group": "Bildschirme",
       "order": 2,
       "theme": "hell",
-      "t": "2026-09-29T10:56:50.933Z"
+      "t": "2026-09-30T11:27:23.924Z"
     },
     {
       "file": "einrichtung-qemu-dunkel.png",
@@ -425,7 +441,7 @@
       "group": "Bildschirme",
       "order": 3,
       "theme": "dunkel",
-      "t": "2026-09-29T10:56:58.511Z"
+      "t": "2026-09-30T11:27:31.956Z"
     },
     {
       "file": "einrichtung-qemu-hell.png",
@@ -434,7 +450,7 @@
       "group": "Bildschirme",
       "order": 3,
       "theme": "hell",
-      "t": "2026-09-29T10:56:55.976Z"
+      "t": "2026-09-30T11:27:29.278Z"
     },
     {
       "file": "einrichtung-neustart-dunkel.png",
@@ -443,7 +459,7 @@
       "group": "Bildschirme",
       "order": 4,
       "theme": "dunkel",
-      "t": "2026-09-29T10:57:03.585Z"
+      "t": "2026-09-30T11:27:37.224Z"
     },
     {
       "file": "einrichtung-neustart-hell.png",
@@ -452,7 +468,7 @@
       "group": "Bildschirme",
       "order": 4,
       "theme": "hell",
-      "t": "2026-09-29T10:57:01.063Z"
+      "t": "2026-09-30T11:27:34.572Z"
     },
     {
       "file": "einrichtung-vm-dunkel.png",
@@ -461,7 +477,7 @@
       "group": "Bildschirme",
       "order": 5,
       "theme": "dunkel",
-      "t": "2026-09-29T10:57:09.505Z"
+      "t": "2026-09-30T11:27:43.296Z"
     },
     {
       "file": "einrichtung-vm-hell.png",
@@ -470,7 +486,7 @@
       "group": "Bildschirme",
       "order": 5,
       "theme": "hell",
-      "t": "2026-09-29T10:57:06.582Z"
+      "t": "2026-09-30T11:27:40.261Z"
     },
     {
       "file": "assistent-1-dunkel.png",
@@ -533,7 +549,7 @@
       "group": "Bildschirme",
       "order": 9,
       "theme": "dunkel",
-      "t": "2026-09-29T10:57:29.898Z"
+      "t": "2026-09-30T11:27:14.058Z"
     },
     {
       "file": "assistent-3-hell.png",
@@ -542,7 +558,7 @@
       "group": "Bildschirme",
       "order": 9,
       "theme": "hell",
-      "t": "2026-09-29T10:57:27.336Z"
+      "t": "2026-09-30T11:27:10.924Z"
     },
     {
       "file": "assistent-4-dunkel.png",
@@ -569,7 +585,7 @@
       "group": "Bildschirme",
       "order": 11,
       "theme": "dunkel",
-      "t": "2026-09-29T10:57:40.102Z"
+      "t": "2026-09-30T11:26:50.319Z"
     },
     {
       "file": "hauptansicht-hell.png",
@@ -578,7 +594,7 @@
       "group": "Bildschirme",
       "order": 11,
       "theme": "hell",
-      "t": "2026-09-29T10:57:37.531Z"
+      "t": "2026-09-30T11:26:47.594Z"
     },
     {
       "file": "hauptansicht-leer-dunkel.png",
@@ -587,7 +603,7 @@
       "group": "Bildschirme",
       "order": 12,
       "theme": "dunkel",
-      "t": "2026-09-29T10:57:45.179Z"
+      "t": "2026-09-30T11:26:56.094Z"
     },
     {
       "file": "hauptansicht-leer-hell.png",
@@ -596,7 +612,7 @@
       "group": "Bildschirme",
       "order": 12,
       "theme": "hell",
-      "t": "2026-09-29T10:57:42.637Z"
+      "t": "2026-09-30T11:26:53.052Z"
     },
     {
       "file": "einstellungen-dunkel.png",
@@ -677,7 +693,7 @@
       "group": "Overlays",
       "order": 17,
       "theme": "dunkel",
-      "t": "2026-09-29T11:12:24.398Z"
+      "t": "2026-09-30T11:27:05.488Z"
     },
     {
       "file": "kontextmenue-hell.png",
@@ -686,7 +702,7 @@
       "group": "Overlays",
       "order": 17,
       "theme": "hell",
-      "t": "2026-09-29T11:12:21.416Z"
+      "t": "2026-09-30T11:27:01.979Z"
     },
     {
       "file": "dialog-sicherungspunkte-dunkel.png",
@@ -851,6 +867,8 @@
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-09-30T09:09:34.898Z",
-  "icloudConflicts": []
+  "updated": "2026-09-30T11:28:19.356Z",
+  "icloudConflicts": [
+    ".git/index 2"
+  ]
 }

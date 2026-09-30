@@ -1,7 +1,7 @@
 {
   "name": "nestbox",
   "private": true,
-  "version": "0.9.2",
+  "version": "0.9.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,22 +12,22 @@
     "progress": "node scripts/progress.mjs"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.8.0",
-    "@tauri-apps/plugin-dialog": "^2.4.0",
-    "@tauri-apps/plugin-opener": "^2.5.0",
-    "lucide-react": "^0.544.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "@tauri-apps/api": "^2.12.0",
+    "@tauri-apps/plugin-dialog": "^2.8.0",
+    "@tauri-apps/plugin-opener": "^2.7.0",
+    "lucide-react": "^1.49.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.13",
-    "@tauri-apps/cli": "^2.8.4",
-    "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
-    "@vitejs/plugin-react": "^5.0.3",
-    "playwright": "^1.55.0",
-    "tailwindcss": "^4.1.13",
-    "typescript": "~5.9.2",
-    "vite": "^7.1.6"
+    "@tailwindcss/vite": "^4.3.3",
+    "@tauri-apps/cli": "^2.12.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "playwright": "^1.63.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1"
   }
 }
