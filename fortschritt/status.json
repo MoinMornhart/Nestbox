@@ -40,6 +40,14 @@
   "now": "Hyper-V kommt als zusätzliche Option zurück (für Windows Pro) – inkl. Übernahme vorhandener Hyper-V-VMs",
   "files": [
     {
+      "path": "src/screens/dialogs.tsx",
+      "t": "2026-10-01T11:21:52.562Z"
+    },
+    {
+      "path": "src-tauri/src/elevate.rs",
+      "t": "2026-10-01T11:21:52.562Z"
+    },
+    {
       "path": "README.md",
       "t": "2026-09-30T13:43:52.543Z"
     },
@@ -61,10 +69,6 @@
     },
     {
       "path": ".github/workflows/check.yml",
-      "t": "2026-09-30T13:29:06.710Z"
-    },
-    {
-      "path": "src/screens/dialogs.tsx",
       "t": "2026-09-30T13:29:06.710Z"
     },
     {
@@ -94,13 +98,17 @@
     {
       "path": "package-lock.json",
       "t": "2026-09-30T11:28:19.316Z"
-    },
-    {
-      "path": "package.json",
-      "t": "2026-09-30T11:28:19.316Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-10-01T11:21:52.561Z",
+      "text": "Version 0.9.5 wird gebaut – kommt per Update-Knopf"
+    },
+    {
+      "t": "2026-10-01T11:21:52.561Z",
+      "text": "Bug behoben: Admin-Aktionen (z. B. Hyper-V-Gruppe) meldeten „keine Rückmeldung“ – Nestbox wartete nicht auf das Admin-Skript und löschte es zu früh"
+    },
     {
       "t": "2026-09-30T13:43:52.543Z",
       "text": "Version 0.9.4 wird gebaut – ab dieser Version aktualisiert sich Nestbox selbst"
@@ -979,6 +987,6 @@
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-09-30T13:43:52.594Z",
+  "updated": "2026-10-01T11:21:52.596Z",
   "icloudConflicts": []
 }

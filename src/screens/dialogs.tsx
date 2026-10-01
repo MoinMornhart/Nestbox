@@ -528,7 +528,7 @@ export function AppSettingsDialog({
       {!host.isHome && (
         <Section
           title="Hyper-V"
-          sub={host.hypervReady ? "VMs aus dem Hyper-V-Manager kannst du in Nestbox übernehmen und hier bequem steuern." : "Hyper-V ist auf diesem PC noch nicht bereit – richte es unter „Einrichtung erneut prüfen“ ein."}
+          sub={host.hypervReady ? "VMs aus dem Hyper-V-Manager kannst du in Nestbox übernehmen und hier bequem steuern." : hypervBlocker(host)}
         >
           <Button
             icon={<Import className="size-4" />}
@@ -777,4 +777,19 @@ export function ImportHypervDialog({ onClose, onDone }: { onClose: () => void; o
       )}
     </Dialog>
   );
+}
+
+/** Nennt den konkreten Grund, warum Hyper-V noch nicht bereit ist (statt eines allgemeinen Hinweises). */
+function hypervBlocker(host: HostInfo): string {
+  if (host.hypervFeature !== "enabled" || !host.hypervModule)
+    return "Hyper-V ist in Windows noch ausgeschaltet – aktiviere es unter „Einrichtung erneut prüfen“ (danach Neustart).";
+  if (host.rebootPending) return "Hyper-V wurde eingeschaltet – starte den PC neu, damit es läuft.";
+  if (!host.windowsHypervisorRunning)
+    return host.isVirtualMachine
+      ? "Hyper-V ist eingeschaltet, kann aber nicht starten: Dieser PC ist selbst eine virtuelle Maschine. Schalte beim Gastgeber verschachtelte Virtualisierung ein (bei Proxmox: CPU-Typ „host“), dann VM aus- und wieder einschalten."
+      : "Hyper-V ist eingeschaltet, läuft aber nicht. Prüfe, ob die Virtualisierung im BIOS an ist, und starte den PC neu.";
+  if (!host.vmmsRunning) return "Der Hyper-V-Dienst (vmms) läuft nicht. Starte den PC neu oder den Dienst „Hyper-V-VM-Verwaltung“.";
+  if (host.hypervGroupNeedsRelogin) return "Fast geschafft: Melde dich einmal von Windows ab und wieder an, damit die neue Berechtigung gilt.";
+  if (!host.hypervGroupOk) return "Dir fehlt noch die Gruppe „Hyper-V-Administratoren“ – füge dich unter „Einrichtung erneut prüfen“ hinzu.";
+  return "Hyper-V ist auf diesem PC noch nicht bereit – öffne „Einrichtung erneut prüfen“.";
 }

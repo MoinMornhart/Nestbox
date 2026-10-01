@@ -52,31 +52,42 @@ pub fn run_ps(what: &str, script: &str) -> AppResult<String> {
     bytes.extend_from_slice(wrapped.as_bytes());
     fs::write(&script_path, bytes)?;
 
-    // Hinweis: elevated-command fügt die Argumente mit Leerzeichen zusammen,
-    // Pfade werden deshalb selbst in Anführungszeichen gesetzt.
-    let mut cmd = StdCommand::new("powershell.exe");
-    cmd.args([
-        "-NoProfile".to_string(),
-        "-NonInteractive".to_string(),
-        "-ExecutionPolicy".to_string(),
-        "Bypass".to_string(),
-        "-WindowStyle".to_string(),
-        "Hidden".to_string(),
-        "-File".to_string(),
-        format!("\"{}\"", script_path.to_string_lossy()),
-    ]);
-
-    let result = ElevatedCommand::new(cmd).output();
+    // Wichtig: elevated-command nutzt ShellExecuteW und kehrt sofort zurück, ohne auf das
+    // Ende des Admin-Skripts zu warten – das Ergebnis war dann noch nicht geschrieben
+    // (Fehler „keine Rückmeldung“). Start-Process -Wait wartet wirklich und meldet einen
+    // Abbruch im UAC-Dialog als Fehler.
+    let launcher = format!(
+        "$ErrorActionPreference = 'Stop'\r\n\
+         try {{\r\n\
+           $p = Start-Process -FilePath 'powershell.exe' -Verb RunAs -Wait -PassThru -WindowStyle Hidden -ArgumentList @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File',{arg})\r\n\
+           'EXIT ' + $p.ExitCode\r\n\
+         }} catch {{\r\n\
+           # 0x800704C7 (ERROR_CANCELLED): „Nein“ im UAC-Dialog\r\n\
+           if ($_.Exception.Message -match 'abgebrochen|canceled|cancelled' -or $_.Exception.HResult -eq -2147023673) {{ 'ABGEBROCHEN' }} else {{ throw }}\r\n\
+         }}",
+        arg = ps::quote(&format!("\"{}\"", script_path.to_string_lossy())),
+    );
+    let launched = ps::run_quiet(&launcher);
     let text = fs::read_to_string(&out_path).unwrap_or_default();
     let _ = fs::remove_dir_all(&tmp);
 
-    if let Err(e) = result {
-        logger::error(&format!("{what}: UAC abgelehnt oder fehlgeschlagen: {e}"));
-        return Err(AppError::new(
-            format!("{what} – Administratorrechte wurden nicht erteilt"),
-            "Bestätige die Windows-Abfrage („Möchten Sie zulassen …?“) mit „Ja“. Ohne Adminrechte kann diese Einstellung nicht geändert werden.",
-        )
-        .with_details(e.to_string()));
+    match &launched {
+        Ok(o) if o.trim() == "ABGEBROCHEN" => {
+            logger::error(&format!("{what}: UAC-Abfrage abgelehnt"));
+            return Err(AppError::new(
+                format!("{what} – Administratorrechte wurden nicht erteilt"),
+                "Bestätige die Windows-Abfrage („Möchten Sie zulassen …?“) mit „Ja“. Ohne Adminrechte kann diese Einstellung nicht geändert werden.",
+            ));
+        }
+        Ok(o) => logger::write("PS-ADMIN", o.trim()),
+        Err(e) => {
+            logger::error(&format!("{what}: Admin-Skript konnte nicht gestartet werden: {}", e.details.as_deref().unwrap_or(&e.title)));
+            return Err(AppError::new(
+                format!("{what} – das Admin-Skript konnte nicht gestartet werden"),
+                "Versuche es noch einmal. Klappt es weiterhin nicht, starte Nestbox einmal per Rechtsklick → „Als Administrator ausführen“.",
+            )
+            .with_details(e.details.clone().unwrap_or_default()));
+        }
     }
 
     let text = text.trim_start_matches('\u{feff}');
