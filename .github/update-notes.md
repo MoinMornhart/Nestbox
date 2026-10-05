@@ -1,2 +1,2 @@
-• Behoben: „Zur Gruppe Hyper-V-Administratoren hinzufügen – keine Rückmeldung“. Nestbox wartet jetzt wirklich, bis die Aktion mit Adminrechten fertig ist. Das betraf alle Aktionen mit Windows-Abfrage.
-• Hyper-V in den Einstellungen nennt jetzt den konkreten Grund, wenn es noch nicht bereit ist
+• Behoben: Links in der App (z. B. „Download-Seite“ oder ISO-Downloads im Assistenten) öffneten sich nicht
+• Behoben (0.9.5): Admin-Aktionen wie „Mich hinzufügen“ meldeten „keine Rückmeldung“

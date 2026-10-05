@@ -8,8 +8,7 @@
   "permissions": [
     "core:default",
     "dialog:allow-open",
-    "opener:allow-open-url",
-    "opener:allow-reveal-item-in-dir",
+    "opener:default",
     "updater:default",
     "process:allow-restart"
   ]

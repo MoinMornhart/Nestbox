@@ -40,6 +40,10 @@
   "now": "Hyper-V kommt als zusätzliche Option zurück (für Windows Pro) – inkl. Übernahme vorhandener Hyper-V-VMs",
   "files": [
     {
+      "path": "src-tauri/capabilities/default.json",
+      "t": "2026-10-05T05:56:44.060Z"
+    },
+    {
       "path": "src/screens/dialogs.tsx",
       "t": "2026-10-01T11:21:52.562Z"
     },
@@ -94,13 +98,17 @@
     {
       "path": "src/vite-env.d.ts",
       "t": "2026-09-30T11:28:19.316Z"
-    },
-    {
-      "path": "package-lock.json",
-      "t": "2026-09-30T11:28:19.316Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-10-05T05:56:44.060Z",
+      "text": "Version 0.9.6 wird gebaut"
+    },
+    {
+      "t": "2026-10-05T05:56:44.059Z",
+      "text": "Bug behoben: Links in der App öffneten sich nicht – Tauri-Freigabe für http/https-Adressen fehlte"
+    },
     {
       "t": "2026-10-01T11:21:52.561Z",
       "text": "Version 0.9.5 wird gebaut – kommt per Update-Knopf"
@@ -987,6 +995,6 @@
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-10-01T11:21:52.596Z",
+  "updated": "2026-10-05T05:56:44.094Z",
   "icloudConflicts": []
 }
