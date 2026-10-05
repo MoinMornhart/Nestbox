@@ -45,6 +45,22 @@ export interface HostInfo {
   hypervReady: boolean;
 }
 
+/** ready = neueste Version liegt bereit · missing = noch nicht geladen · outdated = ältere vorhanden · manual = nur von Hand (Windows) */
+export interface IsoStatus {
+  state: "ready" | "missing" | "outdated" | "manual";
+  path: string | null;
+  fileName: string | null;
+  version: string;
+  offline: boolean;
+}
+
+export interface IsoProgress {
+  phase: "resolve" | "download" | "verify" | "done";
+  received: number;
+  total: number;
+  fileName: string;
+}
+
 export interface HyperVCandidate {
   id: string;
   name: string;
@@ -62,6 +78,8 @@ export interface Settings {
   vmDir: string;
   backend: BackendChoice;
   qemuDir: string;
+  /** leer = „ISOs“ neben dem VM-Ordner */
+  isoDir: string;
   rebootPendingSince: string | null;
   setupDone: boolean;
 }

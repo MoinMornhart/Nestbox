@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Disc3, ExternalLink, Feather, Gauge, HardDrive, Loader2, MemoryStick, MonitorPlay, Rocket, Scale, Sparkles, Upload, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Disc3, Download, ExternalLink, RefreshCw, Feather, Gauge, HardDrive, Loader2, MemoryStick, MonitorPlay, Rocket, Scale, Sparkles, Upload, X } from "lucide-react";
 import { api, onFileDrop, openLink, pickIso } from "../../lib/api";
 import { guessOs, OS_CATALOG, osById, OsLogo, suggestName } from "../../lib/os";
 import { formatMemory, limitsFor, presetsFor, type PresetId } from "../../lib/presets";
-import type { AppError, BackendKind, CreateProgress, HostInfo, IsoInfo, OsFamily, Settings, Vm } from "../../lib/types";
+import type { AppError, BackendKind, CreateProgress, HostInfo, IsoInfo, IsoProgress, IsoStatus, OsFamily, Settings, Vm } from "../../lib/types";
 import { Button, cx, IconButton, Info, Segmented, Slider, TextInput, Tooltip } from "../../components/ui";
 import { ErrorPanel } from "../../components/feedback";
 
@@ -42,6 +42,14 @@ export function Wizard({
   const [guessUnsure, setGuessUnsure] = useState(false);
   const [isoError, setIsoError] = useState<AppError | null>(null);
   const [dragging, setDragging] = useState(false);
+  // Automatischer Download der neuesten ISO
+  const [isoAuto, setIsoAuto] = useState(false);
+  const [tileStatus, setTileStatus] = useState<Record<string, IsoStatus>>({});
+  const [checkingIso, setCheckingIso] = useState(false);
+  const [dl, setDl] = useState<{ osId: string; progress: IsoProgress | null; error: AppError | null } | null>(null);
+  const dlPromise = useRef<Promise<string | null> | null>(null);
+  const currentOs = useRef<string | null>(osId);
+  currentOs.current = osId;
 
   // Schritt 2: Name
   const [name, setName] = useState("");
@@ -71,6 +79,24 @@ export function Wizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Status aller Katalog-Systeme (bereit / lädt automatisch) für die Kacheln
+  useEffect(() => {
+    for (const o of OS_CATALOG) {
+      api
+        .isoStatus(o.id)
+        .then((st) => setTileStatus((m) => ({ ...m, [o.id]: st })))
+        .catch(() => {});
+    }
+  }, []);
+
+  // Windows 11: Downloads-Ordner regelmäßig prüfen, bis die ISO da ist
+  useEffect(() => {
+    if (osId !== "windows11" || iso || step !== 0 || win11Blocked) return;
+    const t = setInterval(() => void prepareIso("windows11", true), 5000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [osId, iso, step]);
+
   // Leistungsstufe folgt dem Betriebssystem
   useEffect(() => {
     if (preset !== "custom") setRes(presets[preset]);
@@ -92,8 +118,9 @@ export function Wizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, phase, osId]);
 
-  async function acceptIso(path: string) {
+  async function acceptIso(path: string, auto = false) {
     setIsoError(null);
+    setIsoAuto(auto);
     try {
       const info = await api.inspectIso(path);
       const g = guessOs(info.fileName);
@@ -118,12 +145,61 @@ export function Wizard({
     setFamily(f);
     setGuessUnsure(false);
     if (!nameTouched) setName(suggestName(id, iso?.fileName ?? null, vms.map((v) => v.name)));
-    // Passt die gewählte ISO nicht zur Kachel, wieder entfernen.
-    if (iso) {
-      const g = guessOs(iso.fileName);
-      if (g.confident && g.osId !== "custom" && g.osId !== id) setIso(null);
+    // Eine selbst gewählte ISO, die zur Kachel passt, bleibt; sonst die neueste automatisch bereitstellen.
+    const keep = !!iso && !isoAuto && guessOs(iso.fileName).osId === id;
+    if (!keep) {
+      setIso(null);
+      if (id !== "custom") void prepareIso(id);
     }
   }
+
+  /** Neueste ISO bereitstellen: vorhandene nutzen, sonst automatisch laden. */
+  async function prepareIso(id: string, quiet = false) {
+    if (dl && dl.osId === id && !dl.error) return; // läuft schon
+    if (!quiet) {
+      setCheckingIso(true);
+      setIsoError(null);
+    }
+    try {
+      const st = await api.isoStatus(id);
+      setTileStatus((m) => ({ ...m, [id]: st }));
+      if (currentOs.current !== id) return;
+      if (st.state === "ready" && st.path) {
+        // Windows aus „Downloads“: in die Bibliothek übernehmen
+        const path = id === "windows11" ? await api.ensureIso(id, () => {}) : st.path;
+        if (currentOs.current === id) await acceptIso(path, true);
+      } else if (st.state === "missing" || st.state === "outdated") {
+        startDownload(id);
+      }
+    } catch (e) {
+      if (!quiet) setIsoError(e as AppError);
+    } finally {
+      if (!quiet) setCheckingIso(false);
+    }
+  }
+
+  function startDownload(id: string) {
+    if (dl && dl.osId !== id && !dl.error) void api.cancelIsoDownload(dl.osId);
+    setIsoError(null);
+    setDl({ osId: id, progress: null, error: null });
+    dlPromise.current = api
+      .ensureIso(id, (p) => setDl((d) => (d && d.osId === id ? { ...d, progress: p } : d)))
+      .then(async (path) => {
+        setTileStatus((m) => ({
+          ...m,
+          [id]: { version: m[id]?.version ?? "", offline: false, state: "ready", path, fileName: path.split("\\").pop() ?? null },
+        }));
+        if (currentOs.current === id) await acceptIso(path, true);
+        setDl((d) => (d && d.osId === id ? null : d));
+        return path;
+      })
+      .catch((e: AppError) => {
+        setDl((d) => (d && d.osId === id ? { ...d, error: e } : d));
+        return null;
+      });
+  }
+
+  const downloading = !!dl && dl.osId === osId && !dl.error;
 
   // Namen live prüfen (kurz verzögert)
   useEffect(() => {
@@ -141,7 +217,7 @@ export function Wizard({
     return () => clearTimeout(t);
   }, [name, step, backend]);
 
-  const canNext = [!!iso && !!osId, !nameError && !checkingName && name.trim().length > 0, true, true][step];
+  const canNext = [!!osId && (!!iso || downloading), !nameError && !checkingName && name.trim().length > 0, true, true][step];
 
   function go(to: number) {
     setDir(to > step ? 1 : -1);
@@ -163,10 +239,19 @@ export function Wizard({
       ["iso", "Installationsmedium einlegen"],
       ["start", "VM starten"],
     ];
+    const waitForIso = !iso && downloading;
+    if (waitForIso) expected.unshift(["download", "Neueste ISO fertig herunterladen"]);
     setProgress(expected.map(([s, l]) => ({ step: s, label: l, state: "pending" })));
     try {
+      let isoPath = iso?.path ?? null;
+      if (waitForIso) {
+        setProgress((list) => list.map((x) => (x.step === "download" ? { ...x, state: "active" } : x)));
+        isoPath = (await dlPromise.current) ?? null;
+        if (!isoPath) throw { title: "Der Download der ISO ist fehlgeschlagen", hint: "Gehe zurück zu Schritt 1 und klicke dort auf „Erneut versuchen“." };
+        setProgress((list) => list.map((x) => (x.step === "download" ? { ...x, state: "done" } : x)));
+      }
       const vm = await api.createVm(
-        { name: name.trim(), osFamily: family, osId: osId ?? "custom", isoPath: iso?.path ?? null, cpus: res.cpus, memoryMb: res.memoryMb, diskGb: res.diskGb },
+        { name: name.trim(), osFamily: family, osId: osId ?? "custom", isoPath, cpus: res.cpus, memoryMb: res.memoryMb, diskGb: res.diskGb },
         backend,
         (p) => setProgress((list) => list.map((x) => (x.step === p.step ? { ...x, state: p.state } : x))),
       );
@@ -262,19 +347,7 @@ export function Wizard({
                       <OsLogo osId={o.id} family={o.family} size={44} />
                       <div className="mt-3 font-semibold">{o.name}</div>
                       <div className="mt-0.5 text-[12.5px] leading-snug text-muted">{blocked ? "Mit QEMU nicht verfügbar" : o.tagline}</div>
-                      {!blocked && (
-                        <span
-                          role="link"
-                          tabIndex={0}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void openLink(o.downloadUrl);
-                          }}
-                          className="mt-3 inline-flex items-center gap-1 text-[12px] font-medium text-accent-text opacity-80 hover:underline hover:opacity-100"
-                        >
-                          Herunterladen <ExternalLink className="size-3" />
-                        </span>
-                      )}
+                      {!blocked && <TileIsoHint osId={o.id} status={tileStatus[o.id]} downloading={!!dl && dl.osId === o.id && !dl.error} />}
                       {osId === o.id && (
                         <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-accent text-white anim-pop">
                           <Check className="size-3" strokeWidth={3} />
@@ -294,7 +367,52 @@ export function Wizard({
 
               {/* ISO-Bereich */}
               <div className="mt-6">
-                {iso ? (
+                {!iso && dl && dl.osId === osId ? (
+                  <DownloadCard
+                    name={osEntry?.name ?? ""}
+                    version={tileStatus[dl.osId]?.version ?? ""}
+                    progress={dl.progress}
+                    error={dl.error}
+                    onCancel={() => void api.cancelIsoDownload(dl.osId)}
+                    onRetry={() => startDownload(dl.osId)}
+                  />
+                ) : !iso && checkingIso ? (
+                  <div className="flex items-center gap-2.5 rounded-2xl border border-line bg-surface px-4 py-5 text-[13.5px] text-text-2 anim-fade">
+                    <Loader2 className="size-4 anim-spin text-accent-text" /> Neueste Version wird gesucht …
+                  </div>
+                ) : !iso && osId === "windows11" && !win11Blocked ? (
+                  <div className="rounded-2xl border border-line bg-surface p-5 anim-rise">
+                    <div className="flex items-start gap-4">
+                      <OsLogo osId="windows11" family="windows" size={40} />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold">Windows 11 einmal bei Microsoft laden</div>
+                        <p className="mt-1 text-[13px] leading-relaxed text-text-2">
+                          Microsoft erlaubt keinen automatischen Download. Lade die ISO auf der offiziellen Seite herunter (Abschnitt „Datenträgerimage (ISO) herunterladen“) – Nestbox findet sie danach im Downloads-Ordner von selbst.
+                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <Button size="sm" variant="primary" icon={<ExternalLink className="size-3.5" />} onClick={() => openLink(osEntry!.downloadUrl)}>
+                            Bei Microsoft herunterladen
+                          </Button>
+                          <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} onClick={() => void prepareIso("windows11")}>
+                            Erneut suchen
+                          </Button>
+                          <button
+                            className="ml-auto text-[12.5px] font-medium text-accent-text hover:underline"
+                            onClick={async () => {
+                              const p = await pickIso();
+                              if (p) await acceptIso(p);
+                            }}
+                          >
+                            Oder Datei auswählen
+                          </button>
+                        </div>
+                        <div className="mt-3 flex items-center gap-1.5 text-[12px] text-muted">
+                          <Loader2 className="size-3 anim-spin" /> Wartet auf die Datei im Downloads-Ordner …
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : iso ? (
                   <div className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-4 anim-rise">
                     <span className="flex size-11 items-center justify-center rounded-xl bg-accent-soft">
                       <Disc3 className="size-5 text-accent-text" />
@@ -302,7 +420,7 @@ export function Wizard({
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium selectable">{iso.fileName}</div>
                       <div className="text-[12.5px] text-muted">
-                        {(iso.sizeMb / 1024).toFixed(1).replace(".", ",")} GB · Installationsmedium
+                        {(iso.sizeMb / 1024).toFixed(1).replace(".", ",")} GB · {isoAuto ? "Neueste Version, automatisch bereitgestellt" : "Installationsmedium"}
                         <Info text="Eine ISO-Datei ist das Abbild einer Installations-DVD. Die VM startet davon, damit du das Betriebssystem installieren kannst." />
                       </div>
                     </div>
@@ -342,13 +460,12 @@ export function Wizard({
                         Datei auswählen
                       </button>
                     </div>
-                    {osEntry && osEntry.id !== "custom" && (
+                    {osEntry && osEntry.id !== "custom" && osEntry.id !== "windows11" && (
                       <button
-                        onClick={() => openLink(osEntry.downloadUrl)}
+                        onClick={() => startDownload(osEntry.id)}
                         className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-surface px-3.5 py-1.5 text-[13px] font-medium text-text-2 shadow-card hover:text-text"
                       >
-                        Noch keine ISO? Offiziell bei {osEntry.name === "Windows 11" ? "Microsoft" : osEntry.name} herunterladen
-                        <ExternalLink className="size-3.5" />
+                        <Download className="size-3.5" /> Neueste {osEntry.name}-Version automatisch laden
                       </button>
                     )}
                   </div>
@@ -684,6 +801,111 @@ function Summary({
           </div>
         ))}
       </dl>
+    </div>
+  );
+}
+
+const gb = (bytes: number) => (bytes / 1024 ** 3).toFixed(1).replace(".", ",");
+
+/** Kleine Statuszeile unter der Kachel: bereit / wird geladen / lädt automatisch. */
+function TileIsoHint({ osId, status, downloading }: { osId: string; status?: IsoStatus; downloading: boolean }) {
+  const cls = "mt-3 inline-flex items-center gap-1 text-[12px] font-medium";
+  if (downloading)
+    return (
+      <span className={cx(cls, "text-accent-text")}>
+        <Loader2 className="size-3 anim-spin" /> Wird geladen …
+      </span>
+    );
+  if (status?.state === "ready")
+    return (
+      <span className={cx(cls, "text-ok")}>
+        <Check className="size-3" strokeWidth={3} /> Bereit{status.version ? ` · ${status.version}` : ""}
+      </span>
+    );
+  if (osId === "windows11")
+    return (
+      <span className={cx(cls, "text-muted")}>
+        <ExternalLink className="size-3" /> Einmal bei Microsoft laden
+      </span>
+    );
+  return (
+    <span className={cx(cls, "text-muted")}>
+      <Download className="size-3" /> {status?.state === "outdated" ? "Neue Version" : "Lädt automatisch"}
+      {status?.version ? ` · ${status.version}` : ""}
+    </span>
+  );
+}
+
+function DownloadCard({
+  name,
+  version,
+  progress,
+  error,
+  onCancel,
+  onRetry,
+}: {
+  name: string;
+  version: string;
+  progress: IsoProgress | null;
+  error: AppError | null;
+  onCancel: () => void;
+  onRetry: () => void;
+}) {
+  const phase = progress?.phase ?? "resolve";
+  const pct = progress && progress.total > 0 ? Math.min(100, Math.round((progress.received / progress.total) * 100)) : null;
+  const title = error
+    ? `${name} konnte nicht geladen werden`
+    : phase === "resolve"
+      ? "Neueste Version wird ermittelt …"
+      : phase === "verify"
+        ? "Datei wird geprüft …"
+        : `${name}${version ? " " + version : ""} wird geladen`;
+  return (
+    <div className="rounded-2xl border border-line bg-surface p-5 anim-rise">
+      <div className="flex items-center gap-4">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent-soft">
+          {error ? <Download className="size-5 text-accent-text" /> : <Loader2 className="size-5 anim-spin text-accent-text" />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-semibold">{title}</div>
+          <div className="text-[12.5px] text-muted">
+            {error
+              ? "Bereits Geladenes bleibt erhalten und wird beim nächsten Versuch fortgesetzt."
+              : phase === "download" && progress && progress.total > 0
+                ? `${gb(progress.received)} von ${gb(progress.total)} GB · ${pct} %`
+                : phase === "verify"
+                  ? "Prüfsumme wird mit der des Herstellers verglichen"
+                  : "Direkt vom offiziellen Server"}
+          </div>
+        </div>
+        {error ? (
+          <Button size="sm" variant="primary" icon={<RefreshCw className="size-3.5" />} onClick={onRetry}>
+            Erneut versuchen
+          </Button>
+        ) : (
+          phase === "download" && (
+            <Button size="sm" variant="ghost" onClick={onCancel}>
+              Abbrechen
+            </Button>
+          )
+        )}
+      </div>
+      {!error && (
+        <>
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-line">
+            <div
+              className={pct === null ? "h-full w-1/3 rounded-full bg-accent anim-pulse" : "h-full rounded-full bg-accent transition-[width] duration-300"}
+              style={pct === null ? undefined : { width: `${pct}%` }}
+            />
+          </div>
+          <p className="mt-3 text-[12.5px] text-muted">Du kannst schon weitermachen – die VM wird angelegt, sobald der Download fertig ist.</p>
+        </>
+      )}
+      {error && (
+        <div className="mt-3">
+          <ErrorPanel error={error} />
+        </div>
+      )}
     </div>
   );
 }

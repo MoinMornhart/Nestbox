@@ -51,6 +51,7 @@ Kein Vorwissen, keine Pro-Lizenz, keine Kommandozeile.
 | 🎬 **Flüssiges Bild** | 3D-Beschleunigung, Ton und Gasterweiterungen per Klick – für Videos und Streaming. |
 | 🕰️ **Sicherungspunkte** | Zustand speichern und jederzeit zurückspringen, z. B. vor einem Update. |
 | 🌗 **Hell & Dunkel** | Folgt automatisch deiner Windows-Einstellung. |
+| 💿 **ISOs automatisch** | Ubuntu, Linux Mint und Fedora lädt Nestbox selbst – immer die neueste Version, geprüft per Prüfsumme. Ein Klick aufs System genügt. |
 | 🔄 **Updates per Klick** | Nestbox findet neue Versionen selbst und aktualisiert sich – signiert und geprüft. |
 | 🧩 **Hyper-V optional** | Mit Windows Pro steuerst du auch Hyper-V-VMs über Nestbox – vorhandene VMs aus dem Hyper-V-Manager übernimmst du per Klick. |
 

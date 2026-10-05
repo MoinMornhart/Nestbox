@@ -1,7 +1,7 @@
 // Mock-Modus: simuliert das Tauri-Backend im Browser (npm run dev).
 // Szenario per URL wählbar: ?mock=bereit | leer | einrichtung | qemu | vm | neustart
 // Fehler erzwingen: ?fail=start (bzw. create, snapshot, …)
-import type { AppError, BackendKind, CreateProgress, CreateSpec, HostInfo, HyperVCandidate, Settings, Snapshot, Vm, VmStatus } from "./types";
+import type { AppError, BackendKind, CreateProgress, CreateSpec, HostInfo, HyperVCandidate, IsoProgress, IsoStatus, Settings, Snapshot, Vm, VmStatus } from "./types";
 
 const hypervCandidates: HyperVCandidate[] = [
   { id: "6f1c2a10-0001", name: "Server 2025 Test", state: "Off", cpus: 4, memoryMb: 8192, diskGb: 127, diskPath: "C:\ProgramData\Microsoft\Windows\Virtual Hard Disks\Server 2025 Test.vhdx", path: "C:\ProgramData\Microsoft\Windows\Hyper-V", windows: true, created: "2026-06-12T09:30:00Z" },
@@ -90,6 +90,7 @@ let settings: Settings = {
   vmDir: "C:\\Users\\Demo\\Nestbox\\VMs",
   backend: "auto",
   qemuDir: "",
+  isoDir: "",
   rebootPendingSince: null,
   setupDone: scenario === "bereit" || scenario === "leer",
 };
@@ -227,6 +228,15 @@ export async function mockCall<T>(cmd: string, args: Record<string, unknown> = {
         return "Du hast schon eine VM mit diesem Namen." as T;
       return null as T;
     }
+    case "iso_status": {
+      await wait(500);
+      return mockIsoStatus(String(args.osId)) as T;
+    }
+    case "iso_folder":
+      return "C:\\Users\\Demo\\Nestbox\\ISOs" as T;
+    case "cancel_iso_download":
+      isoCancelled = true;
+      return undefined as T;
     case "inspect_iso": {
       const p = String(args.path);
       if (!p.toLowerCase().endsWith(".iso"))
@@ -327,4 +337,46 @@ export async function mockCreate(spec: CreateSpec, backend: BackendKind, onProgr
   );
   vms = [...vms, v];
   return structuredClone(v);
+}
+
+// ── ISO-Bibliothek (Mock) ──
+// ?isos=ready → alle Linux-ISOs liegen schon bereit
+const ISO_LATEST: Record<string, { file: string; version: string; sizeMb: number }> = {
+  ubuntu: { file: "ubuntu-26.04.1-desktop-amd64.iso", version: "26.04.1 LTS", sizeMb: 6100 },
+  mint: { file: "linuxmint-22.3-cinnamon-64bit.iso", version: "22.3", sizeMb: 2900 },
+  fedora: { file: "Fedora-Workstation-Live-44-1.7.x86_64.iso", version: "44", sizeMb: 2720 },
+};
+const isoReady = new Set<string>(new URLSearchParams(location.search).get("isos") === "ready" ? Object.keys(ISO_LATEST) : []);
+let isoCancelled = false;
+const isoPath = (file: string) => `C:\\Users\\Demo\\Nestbox\\ISOs\\${file}`;
+
+function mockIsoStatus(osId: string): IsoStatus {
+  if (osId === "windows11") return { state: "manual", path: null, fileName: null, version: "", offline: false };
+  const l = ISO_LATEST[osId];
+  if (!l) return { state: "manual", path: null, fileName: null, version: "", offline: false };
+  return isoReady.has(osId)
+    ? { state: "ready", path: isoPath(l.file), fileName: l.file, version: l.version, offline: false }
+    : { state: "missing", path: null, fileName: l.file, version: l.version, offline: false };
+}
+
+export async function mockEnsureIso(osId: string, onProgress: (p: IsoProgress) => void): Promise<string> {
+  const l = ISO_LATEST[osId];
+  if (!l) throw err("Windows 11 muss einmal von Hand geladen werden", "Microsoft erlaubt keinen automatischen Download.");
+  isoCancelled = false;
+  onProgress({ phase: "resolve", received: 0, total: 0, fileName: "" });
+  await wait(500);
+  const total = l.sizeMb * 1024 * 1024;
+  const pause = new URLSearchParams(location.search).get("isoPause");
+  for (let i = 0; i <= 40; i++) {
+    if (isoCancelled) throw err("Download abgebrochen", "Beim nächsten Versuch wird er an derselben Stelle fortgesetzt.");
+    const received = Math.round((total * i) / 40);
+    onProgress({ phase: "download", received, total, fileName: l.file });
+    if (pause && i >= Number(pause)) await new Promise(() => {});
+    await wait(120);
+  }
+  onProgress({ phase: "verify", received: total, total, fileName: l.file });
+  await wait(900);
+  isoReady.add(osId);
+  onProgress({ phase: "done", received: 0, total: 0, fileName: l.file });
+  return isoPath(l.file);
 }

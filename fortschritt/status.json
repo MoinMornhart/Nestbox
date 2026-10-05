@@ -40,6 +40,14 @@
   "now": "Hyper-V kommt als zusätzliche Option zurück (für Windows Pro) – inkl. Übernahme vorhandener Hyper-V-VMs",
   "files": [
     {
+      "path": "src/screens/wizard/Wizard.tsx",
+      "t": "2026-10-05T08:11:14.744Z"
+    },
+    {
+      "path": "src-tauri/src/iso.rs",
+      "t": "2026-10-05T08:11:14.744Z"
+    },
+    {
       "path": "src-tauri/capabilities/default.json",
       "t": "2026-10-05T05:56:44.060Z"
     },
@@ -90,17 +98,17 @@
     {
       "path": "src-tauri/src/backend/hyperv.rs",
       "t": "2026-09-30T13:29:06.710Z"
-    },
-    {
-      "path": "src-tauri/Cargo.lock",
-      "t": "2026-09-30T11:35:37.792Z"
-    },
-    {
-      "path": "src/vite-env.d.ts",
-      "t": "2026-09-30T11:28:19.316Z"
     }
   ],
   "log": [
+    {
+      "t": "2026-10-05T08:11:14.744Z",
+      "text": "Windows 11: Microsoft erlaubt keinen Auto-Download – Nestbox findet die ISO im Downloads-Ordner von selbst"
+    },
+    {
+      "t": "2026-10-05T08:11:14.743Z",
+      "text": "Neu: Nestbox lädt Ubuntu, Mint und Fedora selbst – immer die neueste Version (Prüfsumme wird kontrolliert, alte Versionen aufgeräumt)"
+    },
     {
       "t": "2026-10-05T05:56:44.060Z",
       "text": "Version 0.9.6 wird gebaut"
@@ -569,7 +577,7 @@
       "group": "Bildschirme",
       "order": 7,
       "theme": "dunkel",
-      "t": "2026-09-29T10:57:14.598Z"
+      "t": "2026-10-05T08:10:04.023Z"
     },
     {
       "file": "assistent-1-hell.png",
@@ -578,32 +586,86 @@
       "group": "Bildschirme",
       "order": 7,
       "theme": "hell",
-      "t": "2026-09-29T10:57:12.044Z"
+      "t": "2026-10-05T08:10:01.516Z"
+    },
+    {
+      "file": "assistent-1-download-dunkel.png",
+      "base": "assistent-1-download",
+      "title": "Assistent 1 – neueste ISO wird automatisch geladen",
+      "group": "Bildschirme",
+      "order": 8,
+      "theme": "dunkel",
+      "t": "2026-10-05T08:10:16.874Z"
+    },
+    {
+      "file": "assistent-1-download-hell.png",
+      "base": "assistent-1-download",
+      "title": "Assistent 1 – neueste ISO wird automatisch geladen",
+      "group": "Bildschirme",
+      "order": 8,
+      "theme": "hell",
+      "t": "2026-10-05T08:10:10.507Z"
+    },
+    {
+      "file": "assistent-1-bereit-dunkel.png",
+      "base": "assistent-1-bereit",
+      "title": "Assistent 1 – ISO schon geladen, ein Klick genügt",
+      "group": "Bildschirme",
+      "order": 9,
+      "theme": "dunkel",
+      "t": "2026-10-05T08:10:26.771Z"
+    },
+    {
+      "file": "assistent-1-bereit-hell.png",
+      "base": "assistent-1-bereit",
+      "title": "Assistent 1 – ISO schon geladen, ein Klick genügt",
+      "group": "Bildschirme",
+      "order": 9,
+      "theme": "hell",
+      "t": "2026-10-05T08:10:21.820Z"
+    },
+    {
+      "file": "assistent-1-windows-dunkel.png",
+      "base": "assistent-1-windows",
+      "title": "Assistent 1 – Windows 11 einmal bei Microsoft laden",
+      "group": "Bildschirme",
+      "order": 10,
+      "theme": "dunkel",
+      "t": "2026-10-05T08:10:34.891Z"
+    },
+    {
+      "file": "assistent-1-windows-hell.png",
+      "base": "assistent-1-windows",
+      "title": "Assistent 1 – Windows 11 einmal bei Microsoft laden",
+      "group": "Bildschirme",
+      "order": 10,
+      "theme": "hell",
+      "t": "2026-10-05T08:10:30.824Z"
     },
     {
       "file": "assistent-1-iso-dunkel.png",
       "base": "assistent-1-iso",
       "title": "Assistent 1 – ISO übernommen",
       "group": "Bildschirme",
-      "order": 8,
+      "order": 11,
       "theme": "dunkel",
-      "t": "2026-09-29T10:57:19.676Z"
+      "t": "2026-10-05T08:10:39.811Z"
     },
     {
       "file": "assistent-1-iso-hell.png",
       "base": "assistent-1-iso",
       "title": "Assistent 1 – ISO übernommen",
       "group": "Bildschirme",
-      "order": 8,
+      "order": 11,
       "theme": "hell",
-      "t": "2026-09-29T10:57:17.161Z"
+      "t": "2026-10-05T08:10:37.341Z"
     },
     {
       "file": "assistent-2-dunkel.png",
       "base": "assistent-2",
       "title": "Assistent 2 – Name",
       "group": "Bildschirme",
-      "order": 9,
+      "order": 12,
       "theme": "dunkel",
       "t": "2026-09-29T10:57:24.764Z"
     },
@@ -612,7 +674,7 @@
       "base": "assistent-2",
       "title": "Assistent 2 – Name",
       "group": "Bildschirme",
-      "order": 9,
+      "order": 12,
       "theme": "hell",
       "t": "2026-09-29T10:57:22.226Z"
     },
@@ -621,7 +683,7 @@
       "base": "assistent-3",
       "title": "Assistent 3 – Leistung (Erweitert)",
       "group": "Bildschirme",
-      "order": 10,
+      "order": 13,
       "theme": "dunkel",
       "t": "2026-09-30T11:27:14.058Z"
     },
@@ -630,7 +692,7 @@
       "base": "assistent-3",
       "title": "Assistent 3 – Leistung (Erweitert)",
       "group": "Bildschirme",
-      "order": 10,
+      "order": 13,
       "theme": "hell",
       "t": "2026-09-30T11:27:10.924Z"
     },
@@ -639,7 +701,7 @@
       "base": "assistent-4",
       "title": "Assistent 4 – Zusammenfassung",
       "group": "Bildschirme",
-      "order": 11,
+      "order": 14,
       "theme": "dunkel",
       "t": "2026-09-29T10:57:34.960Z"
     },
@@ -648,7 +710,7 @@
       "base": "assistent-4",
       "title": "Assistent 4 – Zusammenfassung",
       "group": "Bildschirme",
-      "order": 11,
+      "order": 14,
       "theme": "hell",
       "t": "2026-09-29T10:57:32.427Z"
     },
@@ -657,7 +719,7 @@
       "base": "hauptansicht",
       "title": "Hauptansicht",
       "group": "Bildschirme",
-      "order": 12,
+      "order": 15,
       "theme": "dunkel",
       "t": "2026-09-30T11:26:50.319Z"
     },
@@ -666,7 +728,7 @@
       "base": "hauptansicht",
       "title": "Hauptansicht",
       "group": "Bildschirme",
-      "order": 12,
+      "order": 15,
       "theme": "hell",
       "t": "2026-09-30T11:26:47.594Z"
     },
@@ -675,7 +737,7 @@
       "base": "hauptansicht-leer",
       "title": "Hauptansicht – noch keine VMs",
       "group": "Bildschirme",
-      "order": 13,
+      "order": 16,
       "theme": "dunkel",
       "t": "2026-09-30T11:26:56.094Z"
     },
@@ -684,7 +746,7 @@
       "base": "hauptansicht-leer",
       "title": "Hauptansicht – noch keine VMs",
       "group": "Bildschirme",
-      "order": 13,
+      "order": 16,
       "theme": "hell",
       "t": "2026-09-30T11:26:53.052Z"
     },
@@ -693,7 +755,7 @@
       "base": "einstellungen",
       "title": "Einstellungen",
       "group": "Bildschirme",
-      "order": 14,
+      "order": 17,
       "theme": "dunkel",
       "t": "2026-09-30T13:42:40.618Z"
     },
@@ -702,7 +764,7 @@
       "base": "einstellungen",
       "title": "Einstellungen",
       "group": "Bildschirme",
-      "order": 14,
+      "order": 17,
       "theme": "hell",
       "t": "2026-09-30T13:42:37.903Z"
     },
@@ -711,7 +773,7 @@
       "base": "erstellen-fortschritt",
       "title": "Erstellen – Fortschrittsanzeige",
       "group": "Overlays",
-      "order": 15,
+      "order": 18,
       "theme": "dunkel",
       "t": "2026-09-29T10:57:56.374Z"
     },
@@ -720,7 +782,7 @@
       "base": "erstellen-fortschritt",
       "title": "Erstellen – Fortschrittsanzeige",
       "group": "Overlays",
-      "order": 15,
+      "order": 18,
       "theme": "hell",
       "t": "2026-09-29T10:57:53.357Z"
     },
@@ -729,7 +791,7 @@
       "base": "erstellen-fertig",
       "title": "Erstellen – fertig",
       "group": "Overlays",
-      "order": 16,
+      "order": 19,
       "theme": "dunkel",
       "t": "2026-09-29T11:12:38.935Z"
     },
@@ -738,7 +800,7 @@
       "base": "erstellen-fertig",
       "title": "Erstellen – fertig",
       "group": "Overlays",
-      "order": 16,
+      "order": 19,
       "theme": "hell",
       "t": "2026-09-29T11:12:32.284Z"
     },
@@ -747,7 +809,7 @@
       "base": "erstellen-fehler",
       "title": "Erstellen – Fehlermeldung",
       "group": "Overlays",
-      "order": 17,
+      "order": 20,
       "theme": "dunkel",
       "t": "2026-09-29T10:58:20.395Z"
     },
@@ -756,7 +818,7 @@
       "base": "erstellen-fehler",
       "title": "Erstellen – Fehlermeldung",
       "group": "Overlays",
-      "order": 17,
+      "order": 20,
       "theme": "hell",
       "t": "2026-09-29T10:58:14.964Z"
     },
@@ -765,7 +827,7 @@
       "base": "kontextmenue",
       "title": "Kontextmenü einer VM",
       "group": "Overlays",
-      "order": 18,
+      "order": 21,
       "theme": "dunkel",
       "t": "2026-09-30T11:27:05.488Z"
     },
@@ -774,7 +836,7 @@
       "base": "kontextmenue",
       "title": "Kontextmenü einer VM",
       "group": "Overlays",
-      "order": 18,
+      "order": 21,
       "theme": "hell",
       "t": "2026-09-30T11:27:01.979Z"
     },
@@ -783,7 +845,7 @@
       "base": "dialog-sicherungspunkte",
       "title": "Sicherungspunkte",
       "group": "Overlays",
-      "order": 19,
+      "order": 22,
       "theme": "dunkel",
       "t": "2026-09-29T10:58:32.774Z"
     },
@@ -792,7 +854,7 @@
       "base": "dialog-sicherungspunkte",
       "title": "Sicherungspunkte",
       "group": "Overlays",
-      "order": 19,
+      "order": 22,
       "theme": "hell",
       "t": "2026-09-29T10:58:29.537Z"
     },
@@ -801,7 +863,7 @@
       "base": "dialog-wiederherstellen",
       "title": "Bestätigung – Wiederherstellen",
       "group": "Overlays",
-      "order": 20,
+      "order": 23,
       "theme": "dunkel",
       "t": "2026-09-29T10:58:38.996Z"
     },
@@ -810,7 +872,7 @@
       "base": "dialog-wiederherstellen",
       "title": "Bestätigung – Wiederherstellen",
       "group": "Overlays",
-      "order": 20,
+      "order": 23,
       "theme": "hell",
       "t": "2026-09-29T10:58:35.819Z"
     },
@@ -819,7 +881,7 @@
       "base": "dialog-loeschen",
       "title": "Bestätigung – Löschen",
       "group": "Overlays",
-      "order": 21,
+      "order": 24,
       "theme": "dunkel",
       "t": "2026-09-29T10:58:44.988Z"
     },
@@ -828,7 +890,7 @@
       "base": "dialog-loeschen",
       "title": "Bestätigung – Löschen",
       "group": "Overlays",
-      "order": 21,
+      "order": 24,
       "theme": "hell",
       "t": "2026-09-29T10:58:42.006Z"
     },
@@ -837,7 +899,7 @@
       "base": "dialog-ausschalten",
       "title": "Bestätigung – Sofort ausschalten",
       "group": "Overlays",
-      "order": 22,
+      "order": 25,
       "theme": "dunkel",
       "t": "2026-09-29T10:58:50.222Z"
     },
@@ -846,7 +908,7 @@
       "base": "dialog-ausschalten",
       "title": "Bestätigung – Sofort ausschalten",
       "group": "Overlays",
-      "order": 22,
+      "order": 25,
       "theme": "hell",
       "t": "2026-09-29T10:58:47.642Z"
     },
@@ -855,7 +917,7 @@
       "base": "dialog-hyperv-import",
       "title": "Hyper-V-VMs übernehmen",
       "group": "Overlays",
-      "order": 23,
+      "order": 26,
       "theme": "dunkel",
       "t": "2026-09-30T13:28:11.850Z"
     },
@@ -864,7 +926,7 @@
       "base": "dialog-hyperv-import",
       "title": "Hyper-V-VMs übernehmen",
       "group": "Overlays",
-      "order": 23,
+      "order": 26,
       "theme": "hell",
       "t": "2026-09-30T13:28:08.250Z"
     },
@@ -873,7 +935,7 @@
       "base": "update-verfuegbar",
       "title": "Update verfügbar (Hinweis oben rechts)",
       "group": "Overlays",
-      "order": 24,
+      "order": 27,
       "theme": "dunkel",
       "t": "2026-09-30T13:42:20.753Z"
     },
@@ -882,7 +944,7 @@
       "base": "update-verfuegbar",
       "title": "Update verfügbar (Hinweis oben rechts)",
       "group": "Overlays",
-      "order": 24,
+      "order": 27,
       "theme": "hell",
       "t": "2026-09-30T13:42:14.179Z"
     },
@@ -891,7 +953,7 @@
       "base": "dialog-update",
       "title": "Update installieren",
       "group": "Overlays",
-      "order": 25,
+      "order": 28,
       "theme": "dunkel",
       "t": "2026-09-30T13:42:33.836Z"
     },
@@ -900,7 +962,7 @@
       "base": "dialog-update",
       "title": "Update installieren",
       "group": "Overlays",
-      "order": 25,
+      "order": 28,
       "theme": "hell",
       "t": "2026-09-30T13:42:27.304Z"
     },
@@ -909,7 +971,7 @@
       "base": "dialog-umbenennen",
       "title": "Umbenennen",
       "group": "Overlays",
-      "order": 26,
+      "order": 29,
       "theme": "dunkel",
       "t": "2026-09-29T10:58:55.518Z"
     },
@@ -918,7 +980,7 @@
       "base": "dialog-umbenennen",
       "title": "Umbenennen",
       "group": "Overlays",
-      "order": 26,
+      "order": 29,
       "theme": "hell",
       "t": "2026-09-29T10:58:52.878Z"
     },
@@ -927,7 +989,7 @@
       "base": "dialog-gasterweiterungen",
       "title": "Gasterweiterungen – flüssiges Bild",
       "group": "Overlays",
-      "order": 27,
+      "order": 30,
       "theme": "dunkel",
       "t": "2026-09-29T11:13:27.931Z"
     },
@@ -936,7 +998,7 @@
       "base": "dialog-gasterweiterungen",
       "title": "Gasterweiterungen – flüssiges Bild",
       "group": "Overlays",
-      "order": 27,
+      "order": 30,
       "theme": "hell",
       "t": "2026-09-29T11:13:25.251Z"
     },
@@ -945,7 +1007,7 @@
       "base": "dialog-vm-einstellungen",
       "title": "VM-Einstellungen",
       "group": "Overlays",
-      "order": 28,
+      "order": 31,
       "theme": "dunkel",
       "t": "2026-09-30T13:42:45.997Z"
     },
@@ -954,7 +1016,7 @@
       "base": "dialog-vm-einstellungen",
       "title": "VM-Einstellungen",
       "group": "Overlays",
-      "order": 28,
+      "order": 31,
       "theme": "hell",
       "t": "2026-09-30T13:42:43.284Z"
     },
@@ -963,7 +1025,7 @@
       "base": "fehler-toast",
       "title": "Fehlermeldung mit Lösungsvorschlag",
       "group": "Overlays",
-      "order": 29,
+      "order": 32,
       "theme": "dunkel",
       "t": "2026-09-29T10:59:08.030Z"
     },
@@ -972,7 +1034,7 @@
       "base": "fehler-toast",
       "title": "Fehlermeldung mit Lösungsvorschlag",
       "group": "Overlays",
-      "order": 29,
+      "order": 32,
       "theme": "hell",
       "t": "2026-09-29T10:59:04.368Z"
     },
@@ -981,7 +1043,7 @@
       "base": "tooltip",
       "title": "Tooltip für Fachbegriffe",
       "group": "Overlays",
-      "order": 30,
+      "order": 33,
       "theme": "dunkel",
       "t": "2026-09-29T10:59:14.645Z"
     },
@@ -990,11 +1052,11 @@
       "base": "tooltip",
       "title": "Tooltip für Fachbegriffe",
       "group": "Overlays",
-      "order": 30,
+      "order": 33,
       "theme": "hell",
       "t": "2026-09-29T10:59:11.345Z"
     }
   ],
-  "updated": "2026-10-05T05:56:44.094Z",
+  "updated": "2026-10-05T08:11:14.768Z",
   "icloudConflicts": []
 }

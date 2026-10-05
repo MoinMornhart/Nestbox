@@ -3,6 +3,7 @@ mod commands;
 mod elevate;
 mod error;
 mod host;
+mod iso;
 mod logger;
 mod ps;
 mod store;
@@ -41,6 +42,10 @@ pub fn run() {
             commands::get_host_info,
             commands::install_software,
             commands::fix_enable_whpx,
+            commands::iso_status,
+            commands::ensure_iso,
+            commands::cancel_iso_download,
+            commands::iso_folder,
             commands::fix_hyperv_group,
             commands::fix_enable_hyperv,
             commands::list_hyperv_import,

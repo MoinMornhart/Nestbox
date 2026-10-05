@@ -53,6 +53,8 @@ pub struct Settings {
     pub backend: BackendChoice,
     /// Ordner, in dem qemu-system-x86_64.exe liegt (leer = automatisch suchen)
     pub qemu_dir: String,
+    /// Ordner für heruntergeladene ISO-Dateien (leer = „ISOs“ neben dem VM-Ordner)
+    pub iso_dir: String,
     /// Wurde eine Windows-Funktion aktiviert, die einen Neustart braucht? (Zeitpunkt)
     pub reboot_pending_since: Option<chrono::DateTime<chrono::Utc>>,
     pub setup_done: bool,
@@ -64,6 +66,7 @@ impl Default for Settings {
             vm_dir: default_vm_dir().to_string_lossy().to_string(),
             backend: BackendChoice::Auto,
             qemu_dir: String::new(),
+            iso_dir: String::new(),
             reboot_pending_since: None,
             setup_done: false,
         }

@@ -4,7 +4,7 @@ import { api, pickFolder, revealPath } from "../lib/api";
 import { formatMemory, limitsFor } from "../lib/presets";
 import { BACKEND_LABEL, type AppError, type BackendChoice, type HostInfo, type HyperVCandidate, type Settings, type Snapshot, type Vm } from "../lib/types";
 import { OsLogo } from "../lib/os";
-import { Button, Checkbox, Dialog, Info, Segmented, Slider, Spinner, TextInput, cx } from "../components/ui";
+import { Button, Checkbox, Dialog, IconButton, Info, Segmented, Slider, Spinner, TextInput, cx } from "../components/ui";
 import { ErrorPanel, useToast } from "../components/feedback";
 import { NestboxLogo } from "../components/Logo";
 import type { UpdateState } from "../components/Updater";
@@ -431,6 +431,10 @@ export function AppSettingsDialog({
   onOpenUpdate: () => void;
 }) {
   const [draft, setDraft] = useState(settings);
+  const [isoFolder, setIsoFolder] = useState("");
+  useEffect(() => {
+    api.isoFolder().then(setIsoFolder).catch(() => {});
+  }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
   const [logPath, setLogPath] = useState("");
@@ -478,6 +482,29 @@ export function AppSettingsDialog({
             onClick={async () => {
               const d = await pickFolder(draft.vmDir);
               if (d) setDraft({ ...draft, vmDir: d });
+            }}
+          >
+            Ändern
+          </Button>
+        </div>
+      </Section>
+
+      <Section
+        title="ISO-Dateien"
+        sub="Hier speichert Nestbox die automatisch geladenen Betriebssysteme – immer nur die neueste Version. Tipp: Ein Ordner auf einem Laufwerk mit viel Platz."
+      >
+        <div className="flex gap-2">
+          <div className="flex h-9 min-w-0 flex-1 items-center rounded-[10px] border border-line-strong bg-surface-2 px-3 text-[13px]">
+            <span className="truncate selectable">{draft.isoDir || isoFolder || "…"}</span>
+          </div>
+          <IconButton label="Ordner öffnen" onClick={() => revealPath(draft.isoDir || isoFolder)}>
+            <FileText className="size-4" />
+          </IconButton>
+          <Button
+            icon={<FolderOpen className="size-4" />}
+            onClick={async () => {
+              const d = await pickFolder(draft.isoDir || isoFolder);
+              if (d) setDraft({ ...draft, isoDir: d });
             }}
           >
             Ändern

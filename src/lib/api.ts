@@ -3,6 +3,8 @@
 import type {
   AppError,
   HyperVCandidate,
+  IsoProgress,
+  IsoStatus,
   BackendKind,
   CreateProgress,
   CreateSpec,
@@ -58,6 +60,20 @@ export const api = {
   checkName: (name: string, backend: BackendKind, exceptId?: string) =>
     call<string | null>("check_vm_name", { name, backend, exceptId: exceptId ?? null }),
   inspectIso: (path: string) => call<IsoInfo>("inspect_iso", { path }),
+  isoStatus: (osId: string) => call<IsoStatus>("iso_status", { osId }),
+  isoFolder: () => call<string>("iso_folder"),
+  cancelIsoDownload: (osId: string) => call<void>("cancel_iso_download", { osId }),
+
+  async ensureIso(osId: string, onProgress: (p: IsoProgress) => void): Promise<string> {
+    if (inTauri) {
+      const { Channel } = await import("@tauri-apps/api/core");
+      const channel = new Channel<IsoProgress>();
+      channel.onmessage = onProgress;
+      return call<string>("ensure_iso", { osId, onProgress: channel });
+    }
+    const { mockEnsureIso } = await import("./mock");
+    return mockEnsureIso(osId, onProgress);
+  },
 
   async createVm(spec: CreateSpec, backend: BackendKind, onProgress: (p: CreateProgress) => void): Promise<Vm> {
     if (inTauri) {

@@ -525,3 +525,32 @@ pub async fn delete_snapshot(state: Shared<'_>, id: String, snapshot_id: String)
     })
     .await
 }
+
+// ── ISO-Bibliothek: neueste Version automatisch laden ──
+
+#[tauri::command]
+pub async fn iso_status(state: Shared<'_>, os_id: String) -> AppResult<crate::iso::IsoStatus> {
+    blocking(&state, move |st| crate::iso::status(&settings(&st), &os_id)).await
+}
+
+/// Lädt die neueste ISO (falls nötig) und liefert ihren Pfad. Fortschritt über den Kanal.
+#[tauri::command]
+pub async fn ensure_iso(state: Shared<'_>, os_id: String, on_progress: Channel<crate::iso::IsoProgress>) -> AppResult<String> {
+    blocking(&state, move |st| {
+        crate::iso::ensure(&settings(&st), &os_id, |p| {
+            let _ = on_progress.send(p);
+        })
+    })
+    .await
+}
+
+#[tauri::command]
+pub fn cancel_iso_download(os_id: String) {
+    crate::iso::cancel(&os_id);
+}
+
+/// Tatsächlich genutzter ISO-Ordner (auch wenn in den Einstellungen leer = Standard).
+#[tauri::command]
+pub async fn iso_folder(state: Shared<'_>) -> AppResult<String> {
+    blocking(&state, |st| Ok(crate::iso::iso_dir(&settings(&st)).to_string_lossy().to_string())).await
+}
