@@ -64,7 +64,8 @@ const SHOTS = [
 ];
 
 fs.mkdirSync(outDir, { recursive: true });
-const titles = {};
+// Ohne Prototyp: Schlüssel wie „__proto__“ aus der Datei können so nichts verändern.
+const titles = Object.create(null);
 const titleFile = path.join(outDir, "titel.json");
 try { Object.assign(titles, JSON.parse(fs.readFileSync(titleFile, "utf8"))); } catch {}
 

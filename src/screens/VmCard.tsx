@@ -29,7 +29,7 @@ const STATE_DOT: Record<PowerState, string> = {
   missing: "bg-err",
 };
 
-export function StatusPill({ state, busy }: { state: PowerState; busy?: string | null }) {
+function StatusPill({ state, busy }: { state: PowerState; busy?: string | null }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-text-2">
       {busy ? <Loader2 className="size-3 anim-spin text-accent" /> : <span className={cx("size-2 rounded-full", STATE_DOT[state])} />}
