@@ -29,6 +29,8 @@ const SHOTS = [
   ["assistent-1-download", "Assistent 1 – neueste ISO wird automatisch geladen", "Bildschirme", "?view=wizard&isoPause=17", async (p) => { await p.getByText("Ubuntu", { exact: true }).click(); await p.waitForTimeout(3800); }],
   ["assistent-1-bereit", "Assistent 1 – ISO schon geladen, ein Klick genügt", "Bildschirme", "?view=wizard&isos=ready", async (p) => { await p.waitForTimeout(900); await p.getByText("Linux Mint", { exact: true }).click(); await p.waitForTimeout(1500); }],
   ["assistent-1-windows", "Assistent 1 – Windows 11 einmal bei Microsoft laden", "Bildschirme", "?view=wizard", async (p) => { await p.getByText("Windows 11", { exact: true }).click(); await p.waitForTimeout(1500); }],
+  ["assistent-1-eigene", "Assistent 1 – eigene Systeme als feste Kacheln", "Bildschirme", "?view=wizard&eigene=1", async (p) => { await p.getByText("Kali Linux", { exact: true }).click(); await p.waitForTimeout(900); }],
+  ["assistent-1-merken", "Eigene ISO als festes System merken", "Overlays", "?view=wizard&iso=C:%5CUsers%5CDemo%5CDownloads%5Ckali-linux-2026.3-installer-amd64.iso", async (p) => { await p.waitForTimeout(700); await p.getByText("Als System merken").click(); await p.waitForTimeout(600); }],
   ["assistent-1-iso", "Assistent 1 – ISO übernommen", "Bildschirme", `?view=wizard&iso=${ISO}`],
   ["assistent-2", "Assistent 2 – Name", "Bildschirme", `?view=wizard&step=1&iso=${ISO}`],
   ["assistent-3", "Assistent 3 – Leistung (Erweitert)", "Bildschirme", `?view=wizard&step=2&advanced=1&iso=${ISO}`],

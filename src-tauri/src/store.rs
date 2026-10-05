@@ -46,6 +46,16 @@ pub enum OsFamily {
     Linux,
 }
 
+/// Ein eigenes Betriebssystem: Name, Art und Pfad zur ISO-Datei.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomOs {
+    pub id: String,
+    pub name: String,
+    pub family: OsFamily,
+    pub iso_path: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
@@ -55,6 +65,8 @@ pub struct Settings {
     pub qemu_dir: String,
     /// Ordner für heruntergeladene ISO-Dateien (leer = „ISOs“ neben dem VM-Ordner)
     pub iso_dir: String,
+    /// Eigene ISOs, die als feste Kachel im Assistenten erscheinen
+    pub custom_os: Vec<CustomOs>,
     /// Wurde eine Windows-Funktion aktiviert, die einen Neustart braucht? (Zeitpunkt)
     pub reboot_pending_since: Option<chrono::DateTime<chrono::Utc>>,
     pub setup_done: bool,
@@ -67,6 +79,7 @@ impl Default for Settings {
             backend: BackendChoice::Auto,
             qemu_dir: String::new(),
             iso_dir: String::new(),
+            custom_os: Vec::new(),
             reboot_pending_since: None,
             setup_done: false,
         }

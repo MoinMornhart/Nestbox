@@ -170,6 +170,7 @@ export default function App() {
         <Wizard
           host={host}
           settings={settings}
+          onSaveSettings={saveSettings}
           vms={vms}
           init={wizardInit}
           onClose={() => {

@@ -22,97 +22,97 @@
   "assistent-1-iso": {
     "title": "Assistent 1 – ISO übernommen",
     "group": "Bildschirme",
-    "order": 11
+    "order": 13
   },
   "assistent-2": {
     "title": "Assistent 2 – Name",
     "group": "Bildschirme",
-    "order": 12
+    "order": 14
   },
   "assistent-3": {
     "title": "Assistent 3 – Leistung (Erweitert)",
     "group": "Bildschirme",
-    "order": 13
+    "order": 15
   },
   "assistent-4": {
     "title": "Assistent 4 – Zusammenfassung",
     "group": "Bildschirme",
-    "order": 14
+    "order": 16
   },
   "hauptansicht": {
     "title": "Hauptansicht",
     "group": "Bildschirme",
-    "order": 15
+    "order": 17
   },
   "hauptansicht-leer": {
     "title": "Hauptansicht – noch keine VMs",
     "group": "Bildschirme",
-    "order": 16
+    "order": 18
   },
   "einstellungen": {
     "title": "Einstellungen",
     "group": "Bildschirme",
-    "order": 17
+    "order": 19
   },
   "erstellen-fortschritt": {
     "title": "Erstellen – Fortschrittsanzeige",
     "group": "Overlays",
-    "order": 18
+    "order": 20
   },
   "erstellen-fertig": {
     "title": "Erstellen – fertig",
     "group": "Overlays",
-    "order": 19
+    "order": 21
   },
   "erstellen-fehler": {
     "title": "Erstellen – Fehlermeldung",
     "group": "Overlays",
-    "order": 20
+    "order": 22
   },
   "kontextmenue": {
     "title": "Kontextmenü einer VM",
     "group": "Overlays",
-    "order": 21
+    "order": 23
   },
   "dialog-sicherungspunkte": {
     "title": "Sicherungspunkte",
     "group": "Overlays",
-    "order": 22
+    "order": 24
   },
   "dialog-wiederherstellen": {
     "title": "Bestätigung – Wiederherstellen",
     "group": "Overlays",
-    "order": 23
+    "order": 25
   },
   "dialog-loeschen": {
     "title": "Bestätigung – Löschen",
     "group": "Overlays",
-    "order": 24
+    "order": 26
   },
   "dialog-ausschalten": {
     "title": "Bestätigung – Sofort ausschalten",
     "group": "Overlays",
-    "order": 25
+    "order": 27
   },
   "dialog-umbenennen": {
     "title": "Umbenennen",
     "group": "Overlays",
-    "order": 29
+    "order": 31
   },
   "dialog-vm-einstellungen": {
     "title": "VM-Einstellungen",
     "group": "Overlays",
-    "order": 31
+    "order": 33
   },
   "fehler-toast": {
     "title": "Fehlermeldung mit Lösungsvorschlag",
     "group": "Overlays",
-    "order": 32
+    "order": 34
   },
   "tooltip": {
     "title": "Tooltip für Fachbegriffe",
     "group": "Overlays",
-    "order": 33
+    "order": 35
   },
   "einrichtung-vm": {
     "title": "Einrichtung – Windows läuft selbst in einer VM",
@@ -132,7 +132,7 @@
   "dialog-gasterweiterungen": {
     "title": "Gasterweiterungen – flüssiges Bild",
     "group": "Overlays",
-    "order": 30
+    "order": 32
   },
   "einrichtung-hyperv": {
     "title": "Einrichtung – Hyper-V optional (Windows Pro)",
@@ -142,17 +142,17 @@
   "dialog-hyperv-import": {
     "title": "Hyper-V-VMs übernehmen",
     "group": "Overlays",
-    "order": 26
+    "order": 28
   },
   "update-verfuegbar": {
     "title": "Update verfügbar (Hinweis oben rechts)",
     "group": "Overlays",
-    "order": 27
+    "order": 29
   },
   "dialog-update": {
     "title": "Update installieren",
     "group": "Overlays",
-    "order": 28
+    "order": 30
   },
   "assistent-1-download": {
     "title": "Assistent 1 – neueste ISO wird automatisch geladen",
@@ -168,5 +168,15 @@
     "title": "Assistent 1 – Windows 11 einmal bei Microsoft laden",
     "group": "Bildschirme",
     "order": 10
+  },
+  "assistent-1-eigene": {
+    "title": "Assistent 1 – eigene Systeme als feste Kacheln",
+    "group": "Bildschirme",
+    "order": 11
+  },
+  "assistent-1-merken": {
+    "title": "Eigene ISO als festes System merken",
+    "group": "Overlays",
+    "order": 12
   }
 }

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Disc3, Download, ExternalLink, RefreshCw, Feather, Gauge, HardDrive, Loader2, MemoryStick, MonitorPlay, Rocket, Scale, Sparkles, Upload, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Disc3, Download, ExternalLink, RefreshCw, Feather, Gauge, HardDrive, Loader2, MemoryStick, Pencil, Plus, Bookmark, MonitorPlay, Rocket, Scale, Sparkles, Upload, X } from "lucide-react";
 import { api, onFileDrop, openLink, pickIso } from "../../lib/api";
 import { guessOs, OS_CATALOG, osById, OsLogo, suggestName } from "../../lib/os";
 import { formatMemory, limitsFor, presetsFor, type PresetId } from "../../lib/presets";
-import type { AppError, BackendKind, CreateProgress, HostInfo, IsoInfo, IsoProgress, IsoStatus, OsFamily, Settings, Vm } from "../../lib/types";
-import { Button, cx, IconButton, Info, Segmented, Slider, TextInput, Tooltip } from "../../components/ui";
+import type { AppError, BackendKind, CreateProgress, CustomOs, HostInfo, IsoInfo, IsoProgress, IsoStatus, OsFamily, Settings, Vm } from "../../lib/types";
+import { Button, cx, Dialog, IconButton, Info, Segmented, Slider, TextInput, Tooltip } from "../../components/ui";
 import { ErrorPanel } from "../../components/feedback";
 
 const STEPS = ["System", "Name", "Leistung", "Fertig"];
@@ -22,10 +22,12 @@ export function Wizard({
   vms,
   onClose,
   onCreated,
+  onSaveSettings,
   init,
 }: {
   host: HostInfo;
   settings: Settings;
+  onSaveSettings: (s: Settings) => Promise<void>;
   vms: Vm[];
   onClose: () => void;
   onCreated: (vm: Vm) => void;
@@ -42,6 +44,10 @@ export function Wizard({
   const [guessUnsure, setGuessUnsure] = useState(false);
   const [isoError, setIsoError] = useState<AppError | null>(null);
   const [dragging, setDragging] = useState(false);
+  // Eigene Systeme (feste Kacheln aus den Einstellungen)
+  const [customSel, setCustomSel] = useState<string | null>(null);
+  const [customDraft, setCustomDraft] = useState<{ id?: string; name: string; family: OsFamily; isoPath: string } | null>(null);
+  const customOs = settings.customOs ?? [];
   // Automatischer Download der neuesten ISO
   const [isoAuto, setIsoAuto] = useState(false);
   const [tileStatus, setTileStatus] = useState<Record<string, IsoStatus>>({});
@@ -120,6 +126,7 @@ export function Wizard({
 
   async function acceptIso(path: string, auto = false) {
     setIsoError(null);
+    setCustomSel(null);
     setIsoAuto(auto);
     try {
       const info = await api.inspectIso(path);
@@ -140,6 +147,7 @@ export function Wizard({
   }
 
   function chooseTile(id: string) {
+    setCustomSel(null);
     setOsId(id);
     const f = osById(id)!.family;
     setFamily(f);
@@ -150,6 +158,57 @@ export function Wizard({
     if (!keep) {
       setIso(null);
       if (id !== "custom") void prepareIso(id);
+    }
+  }
+
+  /** Eigenes System gewählt: dessen ISO, Name und Art übernehmen. */
+  async function chooseCustom(c: CustomOs) {
+    setCustomSel(c.id);
+    setOsId("custom");
+    setFamily(c.family);
+    setGuessUnsure(false);
+    setIsoError(null);
+    setIsoAuto(false);
+    try {
+      setIso(await api.inspectIso(c.isoPath));
+      if (!nameTouched) setName(uniqueName(c.name, vms.map((v) => v.name)));
+    } catch {
+      setIso(null);
+      setIsoError({
+        title: `Die ISO von „${c.name}“ wurde nicht gefunden`,
+        hint: "Die Datei wurde verschoben oder gelöscht. Klicke auf „Bearbeiten“ (Stift an der Kachel) und wähle sie neu aus.",
+        details: c.isoPath,
+      });
+    }
+  }
+
+  /** Neues eigenes System: erst ISO wählen, dann Name und Art bestätigen. */
+  async function addCustom(path?: string) {
+    const p = path ?? (await pickIso());
+    if (!p) return;
+    try {
+      const info = await api.inspectIso(p);
+      const g = guessOs(info.fileName);
+      setCustomDraft({ name: niceName(info.fileName), family: g.family, isoPath: info.path });
+    } catch (e) {
+      setIsoError(e as AppError);
+    }
+  }
+
+  async function saveCustom(d: { id?: string; name: string; family: OsFamily; isoPath: string }) {
+    const entry: CustomOs = { id: d.id ?? crypto.randomUUID(), name: d.name.trim(), family: d.family, isoPath: d.isoPath };
+    const list = d.id ? customOs.map((c) => (c.id === d.id ? entry : c)) : [...customOs, entry];
+    await onSaveSettings({ ...settings, customOs: list });
+    setCustomDraft(null);
+    await chooseCustom(entry);
+  }
+
+  async function removeCustom(id: string) {
+    await onSaveSettings({ ...settings, customOs: customOs.filter((c) => c.id !== id) });
+    if (customSel === id) {
+      setCustomSel(null);
+      setOsId(null);
+      setIso(null);
     }
   }
 
@@ -324,6 +383,8 @@ export function Wizard({
         <div className="w-40" />
       </header>
 
+      {customDraft && <CustomOsDialog draft={customDraft} onClose={() => setCustomDraft(null)} onSave={saveCustom} />}
+
       {/* Inhalt */}
       <main className="min-h-0 flex-1 overflow-y-auto">
         <div key={`${step}-${phase === "form" ? "f" : "x"}`} className={cx("mx-auto w-full max-w-[760px] px-8 py-10", dir === 1 ? "anim-slide" : "anim-slide-back")}>
@@ -363,6 +424,49 @@ export function Wizard({
                     tile
                   );
                 })}
+                {customOs.map((c) => (
+                  <div key={c.id} className="group/c relative">
+                    <button
+                      onClick={() => void chooseCustom(c)}
+                      className={cx(
+                        "relative flex w-full flex-col items-start rounded-2xl border bg-surface p-4 text-left transition-all duration-150",
+                        customSel === c.id ? "border-accent shadow-[0_0_0_3px_var(--accent-soft)]" : "border-line hover:-translate-y-0.5 hover:border-line-strong hover:shadow-card",
+                      )}
+                    >
+                      <OsLogo osId="custom" family={c.family} size={44} />
+                      <div className="mt-3 w-full truncate font-semibold">{c.name}</div>
+                      <div className="mt-0.5 w-full truncate text-[12.5px] leading-snug text-muted" title={c.isoPath}>
+                        {c.isoPath.split("\\").pop()}
+                      </div>
+                      <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-medium text-muted transition-opacity group-hover/c:opacity-0">
+                        <Bookmark className="size-3" /> Eigenes System
+                      </span>
+                    </button>
+                    <div className="absolute bottom-2 right-2 flex gap-0.5 opacity-0 transition-opacity group-hover/c:opacity-100">
+                      <IconButton label="Bearbeiten" onClick={() => setCustomDraft({ ...c })}>
+                        <Pencil className="size-3.5" />
+                      </IconButton>
+                      <IconButton label="Aus der Liste entfernen (die Datei bleibt erhalten)" onClick={() => void removeCustom(c.id)}>
+                        <X className="size-3.5" />
+                      </IconButton>
+                    </div>
+                    {customSel === c.id && (
+                      <span className="pointer-events-none absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-accent text-white anim-pop">
+                        <Check className="size-3" strokeWidth={3} />
+                      </span>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={() => void addCustom()}
+                  className="flex min-h-[148px] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line-strong p-4 text-center text-[13px] font-medium text-text-2 transition-colors hover:border-accent hover:bg-accent-soft hover:text-accent-text"
+                >
+                  <span className="flex size-9 items-center justify-center rounded-full bg-bg-subtle">
+                    <Plus className="size-4" />
+                  </span>
+                  Eigenes System
+                  <span className="text-[11.5px] font-normal text-muted">Eigene ISO als feste Kachel</span>
+                </button>
               </div>
 
               {/* ISO-Bereich */}
@@ -424,7 +528,7 @@ export function Wizard({
                         <Info text="Eine ISO-Datei ist das Abbild einer Installations-DVD. Die VM startet davon, damit du das Betriebssystem installieren kannst." />
                       </div>
                     </div>
-                    {osId === "custom" && (
+                    {osId === "custom" && !customSel && (
                       <div className="flex flex-col items-end gap-1">
                         <span className="text-[11.5px] text-muted">{guessUnsure ? "Bitte prüfen:" : "Erkannt:"}</span>
                         <Segmented<OsFamily>
@@ -436,6 +540,15 @@ export function Wizard({
                           ]}
                         />
                       </div>
+                    )}
+                    {osId === "custom" && !customSel && (
+                      <Button
+                        size="sm"
+                        icon={<Bookmark className="size-3.5" />}
+                        onClick={() => setCustomDraft({ name: niceName(iso.fileName), family, isoPath: iso.path })}
+                      >
+                        Als System merken
+                      </Button>
                     )}
                     <Button size="sm" variant="ghost" onClick={async () => { const p = await pickIso(); if (p) await acceptIso(p); }}>
                       Ändern
@@ -907,5 +1020,105 @@ function DownloadCard({
         </div>
       )}
     </div>
+  );
+}
+
+/** Lesbarer Name aus einem ISO-Dateinamen, z. B. „kali-linux-2026.3-installer-amd64.iso“ → „Kali Linux 2026.3“. */
+function niceName(fileName: string): string {
+  const base = fileName.replace(/\.iso$/i, "");
+  const words = base
+    .split(/[-_ ]+/)
+    .filter((w) => !/^(amd64|x64|x86_64|x86|64bit|i386|arm64|installer|install|live|desktop|dvd|netinst|iso|fre|en|de|us|de-de|en-us)$/i.test(w))
+    .slice(0, 4)
+    .map((w) => (/^\d/.test(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)));
+  return words.join(" ").trim() || "Eigenes System";
+}
+
+function uniqueName(base: string, taken: string[]): string {
+  const lower = taken.map((t) => t.toLowerCase());
+  if (!lower.includes(base.toLowerCase())) return base;
+  for (let i = 2; ; i++) if (!lower.includes(`${base} ${i}`.toLowerCase())) return `${base} ${i}`;
+}
+
+function CustomOsDialog({
+  draft,
+  onClose,
+  onSave,
+}: {
+  draft: { id?: string; name: string; family: OsFamily; isoPath: string };
+  onClose: () => void;
+  onSave: (d: { id?: string; name: string; family: OsFamily; isoPath: string }) => Promise<void>;
+}) {
+  const [d, setD] = useState(draft);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<AppError | null>(null);
+  const valid = d.name.trim().length > 0;
+  const save = async () => {
+    if (!valid) return;
+    setBusy(true);
+    try {
+      await onSave(d);
+    } catch (e) {
+      setError(e as AppError);
+      setBusy(false);
+    }
+  };
+  return (
+    <Dialog
+      open
+      onClose={() => !busy && onClose()}
+      width={480}
+      title={draft.id ? "Eigenes System bearbeiten" : "Als festes System merken"}
+      description="Erscheint danach als eigene Kachel im Assistenten – ein Klick genügt, um eine neue VM damit anzulegen."
+      icon={
+        <span className="flex size-10 items-center justify-center rounded-full bg-accent-soft">
+          <Bookmark className="size-5 text-accent-text" />
+        </span>
+      }
+      footer={
+        <>
+          <Button variant="ghost" disabled={busy} onClick={onClose}>
+            Abbrechen
+          </Button>
+          <Button variant="primary" loading={busy} disabled={!valid} onClick={save}>
+            Speichern
+          </Button>
+        </>
+      }
+    >
+      <label className="mb-1.5 block text-[13px] font-medium">Name</label>
+      <TextInput value={d.name} autoFocus onChange={(v) => setD({ ...d, name: v })} onEnter={save} error={valid ? null : "Bitte gib einen Namen ein."} />
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <span className="text-[13px] font-medium">Art des Systems</span>
+        <Segmented<OsFamily>
+          value={d.family}
+          onChange={(family) => setD({ ...d, family })}
+          options={[
+            { value: "linux", label: "Linux" },
+            { value: "windows", label: "Windows" },
+          ]}
+        />
+      </div>
+      <div className="mt-4 flex items-center gap-3 rounded-xl bg-bg-subtle px-3.5 py-2.5">
+        <Disc3 className="size-4 shrink-0 text-muted" />
+        <span className="min-w-0 flex-1 truncate text-[12.5px] text-text-2 selectable" title={d.isoPath}>
+          {d.isoPath}
+        </span>
+        <button
+          className="shrink-0 text-[12.5px] font-medium text-accent-text hover:underline"
+          onClick={async () => {
+            const p = await pickIso();
+            if (p) setD({ ...d, isoPath: p });
+          }}
+        >
+          Andere Datei
+        </button>
+      </div>
+      {error && (
+        <div className="mt-3">
+          <ErrorPanel error={error} />
+        </div>
+      )}
+    </Dialog>
   );
 }

@@ -74,12 +74,21 @@ export interface HyperVCandidate {
   created: string;
 }
 
+export interface CustomOs {
+  id: string;
+  name: string;
+  family: OsFamily;
+  isoPath: string;
+}
+
 export interface Settings {
   vmDir: string;
   backend: BackendChoice;
   qemuDir: string;
   /** leer = „ISOs“ neben dem VM-Ordner */
   isoDir: string;
+  /** Eigene ISOs als feste Kacheln im Assistenten */
+  customOs: CustomOs[];
   rebootPendingSince: string | null;
   setupDone: boolean;
 }

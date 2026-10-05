@@ -91,6 +91,13 @@ let settings: Settings = {
   backend: "auto",
   qemuDir: "",
   isoDir: "",
+  customOs:
+    new URLSearchParams(location.search).get("eigene") === "1"
+      ? [
+          { id: "k1", name: "Kali Linux", family: "linux", isoPath: "C:\\Users\\Demo\\Downloads\\kali-linux-2026.3-installer-amd64.iso" },
+          { id: "k2", name: "Windows Server 2025", family: "windows", isoPath: "D:\\ISOs\\26100.1742_server_eval_x64fre_de-de.iso" },
+        ]
+      : [],
   rebootPendingSince: null,
   setupDone: scenario === "bereit" || scenario === "leer",
 };
