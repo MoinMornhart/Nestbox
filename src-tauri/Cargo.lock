@@ -2216,7 +2216,7 @@ dependencies = [
 
 [[package]]
 name = "nestbox"
-version = "0.9.7"
+version = "0.9.8"
 dependencies = [
  "chrono",
  "elevated-command",

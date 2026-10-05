@@ -1,3 +1,3 @@
-• Neu: Ein Klick auf Ubuntu, Linux Mint oder Fedora genügt – Nestbox lädt die neueste Version selbst, prüft sie und hält sie aktuell
-• Windows 11: Nach dem Download bei Microsoft findet Nestbox die ISO im Downloads-Ordner von selbst
-• Neu in den Einstellungen: Ordner für ISO-Dateien wählbar (z. B. ein Laufwerk mit viel Platz)
+• Neu: Eigene ISOs als feste Systeme – über „+ Eigenes System“ im Assistenten erscheinen sie als eigene Kachel, ein Klick genügt
+• Eine frei gewählte ISO lässt sich mit „Als System merken“ direkt speichern
+• Aktualisierte Bausteine und abgesicherter Build

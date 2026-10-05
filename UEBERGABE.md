@@ -13,10 +13,11 @@ Zuletzt aktualisiert: 01.10.2026
 | Neuester Installer | https://github.com/MoinMornhart/Nestbox/releases/latest/download/Nestbox-Setup.exe |
 | Log der installierten App | `%LOCALAPPDATA%\Nestbox\logs\nestbox.log` |
 
-## Aktueller Stand (Version 0.9.7)
+## Aktueller Stand (Version 0.9.8)
 
 - VirtualBox ist der kostenlose Standard, QEMU die Alternative. Hyper-V ist optional für Windows Pro, inklusive Übernahme vorhandener VMs aus dem Hyper-V-Manager.
 - Update-Funktion: Nestbox sucht beim Start nach neuen Versionen und aktualisiert sich per Klick. Die Updates sind signiert.
+- 0.9.8: Eigene ISOs als feste Systeme (Kachel „+ Eigenes System“ im Assistenten, gespeichert in den Einstellungen unter customOs).
 - 0.9.7: ISOs von Ubuntu, Mint und Fedora lädt Nestbox selbst (immer neueste Version, Ordner: Einstellungen → ISO-Dateien). Windows 11 wird aus „Downloads“ übernommen.
 - 0.9.6: Links in der App öffnen sich wieder (fehlende Opener-Freigabe). 0.9.5 behebt „keine Rückmeldung“ bei Admin-Aktionen, z. B. „Mich hinzufügen“ zur Gruppe Hyper-V-Administratoren.
 
