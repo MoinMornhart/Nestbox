@@ -1,2 +1,3 @@
-• Behoben: Links in der App (z. B. „Download-Seite“ oder ISO-Downloads im Assistenten) öffneten sich nicht
-• Behoben (0.9.5): Admin-Aktionen wie „Mich hinzufügen“ meldeten „keine Rückmeldung“
+• Neu: Ein Klick auf Ubuntu, Linux Mint oder Fedora genügt – Nestbox lädt die neueste Version selbst, prüft sie und hält sie aktuell
+• Windows 11: Nach dem Download bei Microsoft findet Nestbox die ISO im Downloads-Ordner von selbst
+• Neu in den Einstellungen: Ordner für ISO-Dateien wählbar (z. B. ein Laufwerk mit viel Platz)

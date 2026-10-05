@@ -1,6 +1,6 @@
 [package]
 name = "nestbox"
-version = "0.9.6"
+version = "0.9.7"
 description = "Nestbox – virtuelle Maschinen einfach gemacht"
 authors = ["Morni"]
 edition = "2021"
