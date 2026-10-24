@@ -162,23 +162,39 @@ pub fn run_tool(exe: &Path, args: &[String], what: &str, hint: &str) -> AppResul
 
 // ───────────── Prozesse (für CPU-/RAM-Anzeige und „Fenster zeigen“) ─────────────
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct ProcInfo {
     pub pid: u32,
+    /// Elternprozess (z. B. der Startprozess von VirtualBox)
+    #[serde(default)]
+    pub parent: u32,
+    /// Leer, wenn Windows die Befehlszeile nicht herausgibt (geschützte Prozesse)
     pub cmd: String,
+    /// Titel des Hauptfensters, leer ohne Fenster
+    #[serde(default)]
+    pub title: String,
+    /// Kennung des Hauptfensters, 0 ohne Fenster
+    #[serde(default)]
+    pub hwnd: i64,
     pub cpu: u64,
     pub mem: u64,
     pub up: u64,
 }
 
-/// Alle laufenden Prozesse eines Programms (z. B. „VirtualBoxVM.exe“) mit CPU-Zeit und RAM.
-pub fn process_info(image: &str) -> Vec<ProcInfo> {
+/// Alle laufenden Prozesse der Programme (z. B. „VirtualBoxVM.exe“) mit CPU-Zeit, RAM und Hauptfenster.
+pub fn process_info(images: &[&str]) -> Vec<ProcInfo> {
+    let filter = images.iter().map(|i| format!("Name='{i}'")).collect::<Vec<_>>().join(" OR ");
+    let names = images.iter().map(|i| quote(i.trim_end_matches(".exe"))).collect::<Vec<_>>().join(",");
     let script = format!(
-        "$r = @(Get-CimInstance Win32_Process -Filter ('Name=' + [char]39 + {img} + [char]39) | ForEach-Object {{\r\n\
-           [pscustomobject]@{{ pid = [uint32]$_.ProcessId; cmd = [string]$_.CommandLine; cpu = [uint64]($_.KernelModeTime + $_.UserModeTime); mem = [uint64]($_.WorkingSetSize / 1MB); up = [uint64]((Get-Date) - $_.CreationDate).TotalSeconds }}\r\n\
+        "$w = @{{}}\r\n\
+         Get-Process -Name {names} -ErrorAction SilentlyContinue | ForEach-Object {{ try {{ $w[[uint32]$_.Id] = @([string]$_.MainWindowTitle, $_.MainWindowHandle.ToInt64()) }} catch {{ }} }}\r\n\
+         $r = @(Get-CimInstance Win32_Process -Filter {filter} | ForEach-Object {{\r\n\
+           $g = $w[[uint32]$_.ProcessId]; $title = ''; $hwnd = [int64]0\r\n\
+           if ($null -ne $g) {{ $title = $g[0]; $hwnd = $g[1] }}\r\n\
+           [pscustomobject]@{{ pid = [uint32]$_.ProcessId; parent = [uint32]$_.ParentProcessId; cmd = [string]$_.CommandLine; title = $title; hwnd = $hwnd; cpu = [uint64]($_.KernelModeTime + $_.UserModeTime); mem = [uint64]($_.WorkingSetSize / 1MB); up = [uint64]((Get-Date) - $_.CreationDate).TotalSeconds }}\r\n\
          }})\r\n\
          ConvertTo-Json -InputObject $r -Compress",
-        img = quote(image)
+        filter = quote(&filter)
     );
     ps::run_quiet(&script)
         .ok()
@@ -218,6 +234,27 @@ pub fn bring_to_front(image: &str, marker: &str) -> AppResult<bool> {
         ),
     )?;
     Ok(out.trim() == "ja")
+}
+
+/// Holt ein Fenster in den Vordergrund und stellt es wieder her, falls es minimiert ist.
+/// Klappt das nicht (z. B. wenn Windows den Hilfscode blockiert), wenigstens den Prozess aktivieren.
+pub fn show_window(pid: u32, hwnd: i64) -> AppResult<()> {
+    // [char]34 statt Anführungszeichen, damit die Befehlszeile von PowerShell nichts verschluckt.
+    ps::run(
+        "VM-Fenster anzeigen",
+        &format!(
+            "try {{\r\n\
+               $q = [char]34; $dll = '[DllImport(' + $q + 'user32.dll' + $q + ')] public static extern bool '\r\n\
+               Add-Type -Namespace Nestbox -Name Fenster -MemberDefinition ($dll + 'IsIconic(IntPtr h); ' + $dll + 'ShowWindowAsync(IntPtr h, int n); ' + $dll + 'SetForegroundWindow(IntPtr h);')\r\n\
+               $h = [IntPtr]::new([int64]{hwnd})\r\n\
+               if ([Nestbox.Fenster]::IsIconic($h)) {{ $null = [Nestbox.Fenster]::ShowWindowAsync($h, 9) }}\r\n\
+               $null = [Nestbox.Fenster]::SetForegroundWindow($h)\r\n\
+             }} catch {{\r\n\
+               $null = (New-Object -ComObject WScript.Shell).AppActivate([int]{pid})\r\n\
+             }}"
+        ),
+    )?;
+    Ok(())
 }
 
 /// Löscht die Dateien einer VM. Der ganze Ordner wird nur entfernt, wenn er

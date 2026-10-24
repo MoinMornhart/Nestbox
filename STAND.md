@@ -12,6 +12,7 @@ Windows-Desktop-App (10/11, Home und Pro), mit der man ohne Vorwissen virtuelle 
 - Signierte Update-Funktion über GitHub-Releases, Installer-Build per GitHub Actions, Single-Instance.
 
 ## Zuletzt gemacht
+- 2026-10-24: Fehler aus Issue #15 behoben (Branch `claude/lucid-bell-812b5d`, noch nicht in `main`): „VM-Fenster öffnen“ schlug bei VirtualBox fehl und CPU/RAM standen falsch. Ursache: VirtualBox schützt seine VM-Prozesse, deren Befehlszeile ist nicht lesbar. Jetzt Erkennung über Fenstertitel und Prozess-Kette (`backend/vbox.rs`), minimierte Fenster werden wiederhergestellt.
 - 2026-10-24: Cloud-Start-Hook (Philips Skills automatisch in Cloud-Sitzungen, `.claude/hooks/skills-cloud.sh`).
 - 2026-10-05: 0.9.8 eigene ISOs als feste Systeme; Sicherheitsbefunde behoben (Actions auf Commit-SHAs); Abhängigkeiten aktualisiert (Tauri 2.12.1).
 - 2026-10-05: 0.9.7 ISO-Bibliothek; 0.9.6 Links in der App öffnen wieder.
@@ -19,12 +20,14 @@ Windows-Desktop-App (10/11, Home und Pro), mit der man ohne Vorwissen virtuelle 
 - 2026-09-30: 0.9.4 Update-Funktion; Hyper-V als optionales Backend.
 
 ## Offen / Nächste Schritte
+- Fix für Issue #15 auf echtem PC testen (VirtualBox-VM starten → „Anzeigen“, auch minimiert; CPU/RAM-Werte plausibel?), dann nach `main` und als 0.9.9 veröffentlichen. Unklar: ob der Arbeitsspeicher-Wert von VirtualBox den ganzen Gast-RAM enthält.
+- Issues #13–#15 von JONIMONI09 (Browser-Version, Speicherort/„leichte Version“, eigene VM-Technik/KI-Schnittstelle): Philip entscheidet, ob umgesetzt wird.
 - Aus `UEBERGABE.md` (01.10.) noch als „zu testen“ markiert – ob inzwischen getestet, ist **unklar**:
   - Einrichtung → Hyper-V → „Mich hinzufügen“, danach ab-/anmelden.
   - VirtualBox-Installation und Anlegen einer VM auf echtem PC.
   - Update-Knopf (installierte App soll neuere Version selbst finden).
 - `UEBERGABE.md` ist veraltet (nennt iCloud als Projektort) – Projekte liegen jetzt in `C:\Projekte` + GitHub.
-- Bekannte Fehler: keine im Repo dokumentiert.
+- Bekannte Fehler: siehe offene Issues auf GitHub (#15 enthält zwei echte Fehler, Fix auf dem Branch oben).
 
 ## Wichtige Infos
 - Technik: Tauri 2 (Rust) + React 19 + TypeScript + Vite + Tailwind 4; VM-Steuerung im Rust-Backend (PowerShell/VBoxManage/QEMU).

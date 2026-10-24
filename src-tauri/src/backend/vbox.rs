@@ -4,8 +4,8 @@
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use super::{bring_to_front, cpu_percent, process_info, remove_vm_files, run_tool, safe_file_name};
-use super::{CreateSpec, PowerState, Progress, Snapshot, VmBackend, VmChanges, VmStatus};
+use super::{cpu_percent, process_info, remove_vm_files, run_tool, safe_file_name, show_window};
+use super::{CreateSpec, PowerState, ProcInfo, Progress, Snapshot, VmBackend, VmChanges, VmStatus};
 use crate::error::{AppError, AppResult};
 use crate::logger;
 use crate::store::{BackendKind, OsFamily, Settings, VmRecord};
@@ -15,6 +15,8 @@ pub struct VBoxBackend {
 }
 
 const VM_PROCESS: &str = "VirtualBoxVM.exe";
+/// VMs ohne Fenster (z. B. in VirtualBox per „Ohne Anzeige starten“)
+const HEADLESS_PROCESS: &str = "VBoxHeadless.exe";
 const CONTROLLER: &str = "SATA";
 
 /// Sucht VBoxManage.exe (Installationspfad aus der Umgebung, Standardpfad, PATH).
@@ -74,6 +76,35 @@ fn machine_value(text: &str, key: &str) -> Option<String> {
     })
 }
 
+/// Fenstertitel einer VM: „Name [Läuft] - Oracle VirtualBox“, mit Sicherungspunkt „Name (Punkt) [Läuft] - …“
+fn title_matches(title: &str, name: &str) -> bool {
+    title.strip_prefix(name).is_some_and(|rest| rest.starts_with(" [") || rest.starts_with(" ("))
+}
+
+/// Die Prozesse einer VM. VirtualBox startet jede VM als Kette aus drei Prozessen und schützt sie
+/// vor anderen Programmen: Die Befehlszeile der eigentlichen VM (mit dem Fenster) ist nicht lesbar.
+/// Deshalb zählt ein Prozess dazu, wenn er selbst oder ein Elternprozess die VM-ID in der
+/// Befehlszeile hat oder das Fenster der VM zeigt.
+fn vm_processes<'a>(procs: &'a [ProcInfo], id: &str, name: &str) -> Vec<&'a ProcInfo> {
+    let id = id.to_lowercase();
+    let own = |p: &ProcInfo| (!id.is_empty() && p.cmd.to_lowercase().contains(&id)) || title_matches(&p.title, name);
+    procs
+        .iter()
+        .filter(|p| {
+            let mut cur = Some(*p);
+            // Die Kette ist höchstens drei Prozesse lang; die Grenze schützt vor wiederverwendeten Prozess-IDs.
+            for _ in 0..4 {
+                let Some(c) = cur else { return false };
+                if own(c) {
+                    return true;
+                }
+                cur = procs.iter().find(|q| q.pid == c.parent && q.pid != c.pid);
+            }
+            false
+        })
+        .collect()
+}
+
 /// „UUID: xxxxxxxx-…“ aus der Ausgabe von createvm / snapshot take
 fn parse_uuid(text: &str) -> Option<String> {
     text.lines().find_map(|l| {
@@ -97,8 +128,8 @@ impl VBoxBackend {
         vm.vbox_id.clone().unwrap_or_else(|| vm.name.clone())
     }
 
-    /// running | paused | saved | poweroff | aborted | … (None = VM existiert nicht mehr)
-    fn state(&self, vm: &VmRecord) -> Option<String> {
+    /// Alle Angaben von showvminfo als „Schlüssel=Wert“-Zeilen (None = VM existiert nicht mehr)
+    fn info(&self, vm: &VmRecord) -> Option<String> {
         let out = crate::ps::hidden_command(&self.exe.to_string_lossy())
             .args(["showvminfo", &Self::id(vm), "--machinereadable"])
             .output()
@@ -106,16 +137,30 @@ impl VBoxBackend {
         if !out.status.success() {
             return None;
         }
-        machine_value(&String::from_utf8_lossy(&out.stdout), "VMState")
+        Some(String::from_utf8_lossy(&out.stdout).to_string())
     }
 
-    fn require_state(&self, vm: &VmRecord) -> AppResult<String> {
-        self.state(vm).ok_or_else(|| {
+    /// running | paused | saved | poweroff | aborted | … (None = VM existiert nicht mehr)
+    fn state(&self, vm: &VmRecord) -> Option<String> {
+        machine_value(&self.info(vm)?, "VMState")
+    }
+
+    fn require_info(&self, vm: &VmRecord) -> AppResult<String> {
+        self.info(vm).ok_or_else(|| {
             AppError::new(
                 format!("„{}“ wurde in VirtualBox nicht gefunden", vm.name),
                 "Die VM wurde vermutlich außerhalb von Nestbox gelöscht. Entferne sie über „…“ → „Löschen“ aus der Liste.",
             )
         })
+    }
+
+    fn require_state(&self, vm: &VmRecord) -> AppResult<String> {
+        Ok(machine_value(&self.require_info(vm)?, "VMState").unwrap_or_default())
+    }
+
+    /// Name, wie VirtualBox ihn kennt (steht im Fenstertitel)
+    fn vbox_name(info: &str, vm: &VmRecord) -> String {
+        machine_value(info, "name").unwrap_or_else(|| vm.name.clone())
     }
 
     fn is_active(state: &str) -> bool {
@@ -158,6 +203,8 @@ fn map_error(mut e: AppError) -> AppError {
         "VirtualBox braucht die Hardware-Virtualisierung des Prozessors. Schalte sie im BIOS/UEFI ein (bzw. – wenn dieses Windows selbst eine VM ist – im Host). Ohne sie funktioniert nur QEMU, und zwar langsam."
     } else if d.contains("not enough memory") || d.contains("verr_no_memory") || d.contains("nicht genügend") {
         "Es ist gerade nicht genug freier Arbeitsspeicher da. Schließe andere Programme oder VMs, oder gib der VM weniger Arbeitsspeicher."
+    } else if d.contains("incompatible with launching a separate ui process") {
+        "Die VM läuft schon mit eigenem Fenster. Klicke in der Taskleiste auf das VirtualBox-Symbol der VM, um es anzuzeigen."
     } else if d.contains("is already locked") || d.contains("session") && d.contains("locked") {
         "Die VM ist gerade in Benutzung. Warte einen Moment oder schließe das VirtualBox-Fenster und versuche es erneut."
     } else if d.contains("already exists") {
@@ -369,25 +416,37 @@ impl VmBackend for VBoxBackend {
     }
 
     fn open_console(&self, vm: &VmRecord) -> AppResult<()> {
-        let st = self.require_state(vm)?;
-        if !Self::is_active(&st) {
+        let info = self.require_info(vm)?;
+        if !Self::is_active(&machine_value(&info, "VMState").unwrap_or_default()) {
             return Err(AppError::new(format!("„{}“ läuft gerade nicht", vm.name), "Starte die VM, dann öffnet sich ihr Fenster automatisch."));
         }
-        if !bring_to_front(VM_PROCESS, &Self::id(vm))? {
-            // Läuft ohne Fenster (z. B. aus VirtualBox heraus „headless“ gestartet) – Fenster dazuholen.
-            self.run("VM-Fenster öffnen", args(&["startvm", &Self::id(vm), "--type", "separate"]))?;
+        let procs = process_info(&[VM_PROCESS, HEADLESS_PROCESS]);
+        if let Some(p) = vm_processes(&procs, &Self::id(vm), &Self::vbox_name(&info, vm)).into_iter().find(|p| p.hwnd != 0) {
+            return show_window(p.pid, p.hwnd);
         }
+        // Ein zusätzliches Fenster erlaubt VirtualBox nur für VMs, die ohne Fenster laufen
+        // (z. B. aus VirtualBox heraus „Ohne Anzeige“ gestartet). Sitzungsname dann „headless“, sonst „GUI/Qt“.
+        if machine_value(&info, "SessionName").is_some_and(|s| s.starts_with("GUI")) {
+            return Err(AppError::new(
+                format!("Das Fenster von „{}“ wurde nicht gefunden", vm.name),
+                "Die VM läuft mit eigenem Fenster. Klicke in der Taskleiste auf das VirtualBox-Symbol der VM. Startet sie gerade erst, warte einen Moment.",
+            ));
+        }
+        self.run("VM-Fenster öffnen", args(&["startvm", &Self::id(vm), "--type", "separate"]))?;
         Ok(())
     }
 
     fn status(&self, vms: &[VmRecord]) -> AppResult<Vec<VmStatus>> {
-        let states: Vec<(String, Option<String>)> = vms.iter().map(|v| (v.id.clone(), self.state(v))).collect();
-        let any_active = states.iter().any(|(_, s)| s.as_deref().map(Self::is_active).unwrap_or(false));
-        let procs = if any_active { process_info(VM_PROCESS) } else { vec![] };
+        let infos: Vec<Option<String>> = vms.iter().map(|v| self.info(v)).collect();
+        let any_active = infos.iter().flatten().any(|i| machine_value(i, "VMState").is_some_and(|s| Self::is_active(&s)));
+        let procs = if any_active { process_info(&[VM_PROCESS, HEADLESS_PROCESS]) } else { vec![] };
         Ok(vms
             .iter()
-            .zip(states)
-            .map(|(vm, (id, st))| {
+            .zip(infos)
+            .map(|(vm, info)| {
+                let id = vm.id.clone();
+                let st = info.as_deref().and_then(|i| machine_value(i, "VMState"));
+                let name = info.as_deref().map(|i| Self::vbox_name(i, vm)).unwrap_or_else(|| vm.name.clone());
                 let state = match st.as_deref() {
                     None => PowerState::Missing,
                     Some("running") => PowerState::Running,
@@ -398,7 +457,9 @@ impl VmBackend for VBoxBackend {
                     Some("saving") => PowerState::Saving,
                     Some(_) => PowerState::Unknown,
                 };
-                let p = procs.iter().find(|p| p.cmd.contains(&Self::id(vm)));
+                // Die eigentliche VM ist der Prozess mit dem meisten Arbeitsspeicher; die beiden
+                // Startprozesse davor belegen nur wenige MB.
+                let p = vm_processes(&procs, &Self::id(vm), &name).into_iter().max_by_key(|p| p.mem);
                 let (cpu, mem, up) = match p {
                     Some(p) if state == PowerState::Running || state == PowerState::Paused => (cpu_percent(p.pid, p.cpu), p.mem, p.up),
                     _ => (0.0, 0, 0),
@@ -498,5 +559,83 @@ impl VmBackend for VBoxBackend {
     fn delete_snapshot(&self, vm: &VmRecord, snapshot_id: &str) -> AppResult<()> {
         self.run("Sicherungspunkt löschen", args(&["snapshot", &Self::id(vm), "delete", snapshot_id]))?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const ID: &str = "2f1c5e3a-9b7d-4c1e-8a2f-0d3b6c9e1f47";
+
+    fn proc(pid: u32, parent: u32, cmd: &str, title: &str, mem: u64) -> ProcInfo {
+        ProcInfo { pid, parent, cmd: cmd.into(), title: title.into(), hwnd: if title.is_empty() { 0 } else { 7000 + pid as i64 }, mem, ..Default::default() }
+    }
+
+    /// So sieht eine laufende VM aus: Startprozess (lesbar), Zwischenprozess und eigentliche VM (geschützt).
+    fn fedora_kette(startprozess_lesbar: bool) -> Vec<ProcInfo> {
+        let cmd = format!("\"C:\\Program Files\\Oracle\\VirtualBox\\VirtualBoxVM.exe\" --comment \"Fedora 44\" --startvm {ID} --no-startvm-errormsgbox");
+        vec![
+            proc(100, 4, if startprozess_lesbar { &cmd } else { "" }, "", 12),
+            proc(101, 100, "", "", 9),
+            proc(102, 101, "", "Fedora 44 [Läuft] - Oracle VirtualBox", 2900),
+            // eine andere VM
+            proc(200, 4, "", "", 11),
+            proc(201, 200, "", "", 8),
+            proc(202, 201, "", "Ubuntu [Läuft] - Oracle VirtualBox", 1800),
+        ]
+    }
+
+    fn pids(list: Vec<&ProcInfo>) -> Vec<u32> {
+        list.iter().map(|p| p.pid).collect()
+    }
+
+    #[test]
+    fn fenstertitel_erkennen() {
+        assert!(title_matches("Fedora 44 [Läuft] - Oracle VirtualBox", "Fedora 44"));
+        assert!(title_matches("Fedora 44 (Vor dem Update) [Running] - Oracle VirtualBox : 2", "Fedora 44"));
+        assert!(!title_matches("Fedora 44 [Läuft] - Oracle VirtualBox", "Fedora"));
+        assert!(!title_matches("Oracle VirtualBox Manager", "Fedora 44"));
+        assert!(!title_matches("", "Fedora 44"));
+    }
+
+    #[test]
+    fn prozesse_ueber_befehlszeile_und_eltern() {
+        let procs = fedora_kette(true);
+        assert_eq!(pids(vm_processes(&procs, ID, "Fedora 44")), vec![100, 101, 102]);
+        assert_eq!(pids(vm_processes(&procs, &ID.to_uppercase(), "Fedora 44")), vec![100, 101, 102]);
+    }
+
+    #[test]
+    fn prozesse_nur_ueber_fenstertitel() {
+        // Befehlszeilen alle geschützt – so trat der Fehler aus Issue #15 auf.
+        let procs = fedora_kette(false);
+        let found = vm_processes(&procs, ID, "Fedora 44");
+        assert_eq!(pids(found.clone()), vec![102]);
+        assert_eq!(found.iter().find(|p| p.hwnd != 0).map(|p| p.pid), Some(102));
+    }
+
+    #[test]
+    fn messwerte_von_der_eigentlichen_vm() {
+        let procs = fedora_kette(true);
+        let vm = vm_processes(&procs, ID, "Fedora 44").into_iter().max_by_key(|p| p.mem).unwrap();
+        assert_eq!(vm.pid, 102);
+        assert_eq!(vm.mem, 2900);
+    }
+
+    #[test]
+    fn keine_endlosschleife_bei_wiederverwendeten_ids() {
+        let procs = vec![proc(300, 301, "", "", 5), proc(301, 300, "", "", 5), proc(302, 302, "", "", 5)];
+        assert!(vm_processes(&procs, ID, "Fedora 44").is_empty());
+    }
+
+    #[test]
+    fn meldung_bei_vm_mit_eigenem_fenster() {
+        let e = map_error(AppError::new("VM-Fenster öffnen", "Versuche es noch einmal.").with_details(
+            "VBoxManage.exe: error: The machine 'Fedora 44' is in a state which is incompatible with launching a separate UI process\n\
+             VBoxManage.exe: error: Details: code VBOX_E_INVALID_OBJECT_STATE (0x80bb0007), component MachineWrap, interface IMachine, callee IUnknown\n\
+             VBoxManage.exe: error: Context: \"LaunchVMProcess(a->session, sessionType.raw(), ComSafeArrayAsInParam(aBstrEnv), progress.asOutParam())\" at line 921 of file VBoxManageMisc.cpp",
+        ));
+        assert!(e.hint.contains("Taskleiste"), "{}", e.hint);
     }
 }

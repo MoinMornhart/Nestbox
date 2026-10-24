@@ -405,7 +405,7 @@ impl VmBackend for QemuBackend {
         }
 
         let any_running = states.iter().any(|(_, s)| *s != PowerState::Off);
-        let procs = if any_running { process_info("qemu-system-x86_64.exe") } else { vec![] };
+        let procs = if any_running { process_info(&["qemu-system-x86_64.exe"]) } else { vec![] };
         Ok(states
             .into_iter()
             .map(|(id, state)| {
