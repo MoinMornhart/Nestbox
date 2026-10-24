@@ -1,3 +1,3 @@
-• Neu: Eigene ISOs als feste Systeme – über „+ Eigenes System“ im Assistenten erscheinen sie als eigene Kachel, ein Klick genügt
-• Eine frei gewählte ISO lässt sich mit „Als System merken“ direkt speichern
-• Aktualisierte Bausteine und abgesicherter Build
+• Behoben: „Anzeigen“ holt das Fenster einer laufenden VirtualBox-VM zuverlässig nach vorne – auch wenn es minimiert war
+• Behoben: CPU und Arbeitsspeicher laufender VirtualBox-VMs werden jetzt richtig angezeigt
+• Klarere Meldung mit Lösungsvorschlag, falls VirtualBox kein zusätzliches VM-Fenster öffnen kann
